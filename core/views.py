@@ -10,6 +10,9 @@ def robots_txt(request):
     lines = [
         "User-agent: *",
         f"Disallow: /{settings.ADMIN_URL}",
-        f"Sitemap: {request.build_absolute_uri('/sitemap.xml')}",
+        "Disallow: /api/",
+        "Disallow: /*?sent=",
+        "",
+        f"Sitemap: {settings.SITE_URL}/sitemap.xml",
     ]
     return HttpResponse("\n".join(lines) + "\n", content_type="text/plain")

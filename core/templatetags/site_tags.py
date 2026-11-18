@@ -119,3 +119,32 @@ def in_section(page, item):
 @register.filter
 def page_type(page):
     return type(page).__name__
+
+
+@register.inclusion_tag("includes/seo_head.html", takes_context=True)
+def seo_head(context):
+    from django.utils.safestring import mark_safe
+    from core import seo
+    from core.models import SiteSettings
+    page = context.get("page")
+    page = page if isinstance(page, Page) else None
+    lang = current_lang()
+    return {
+        "page": page,
+        "title": seo.meta_title(page),
+        "description": seo.meta_description(page),
+        "canonical": page.full_url if page else "",
+        "alternates": seo.alternates(page) if page else [],
+        "og_image": seo.og_image(page) if page else seo.absolute("/static/img/logo.png"),
+        "og_locale": seo.OG_LOCALES.get(lang, "ru_RU"),
+        "jsonld": mark_safe(seo.structured_data(page)),
+        "s": SiteSettings.load(),
+        "noindex": bool(page and getattr(page, "is_over", False)),
+    }
+
+
+@register.inclusion_tag("includes/analytics.html")
+def analytics():
+    from django.conf import settings as dj_settings
+    from core.models import SiteSettings
+    return {"s": SiteSettings.load(), "enabled": not dj_settings.DEBUG}

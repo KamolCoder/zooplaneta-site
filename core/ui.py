@@ -20,6 +20,18 @@ STRINGS: dict[str, dict[str, str]] = {
     "all_rights": {"ru": "Все права защищены.", "uz": "Barcha huquqlar himoyalangan.", "en": "All rights reserved."},
     "home": {"ru": "Главная", "uz": "Bosh sahifa", "en": "Home"},
     "skip": {"ru": "Перейти к содержанию", "uz": "Asosiy qismga oʻtish", "en": "Skip to content"},
+    # seo (auto titles / descriptions; {name}, {address}, {hours}, {phone} are filled in)
+    "seo_store_title": {"ru": "Зоомагазин Zoo Planeta — {name}, Ташкент", "uz": "Zoo Planeta zoodoʻkoni — {name}, Toshkent",
+                        "en": "Zoo Planeta pet store — {name}, Tashkent"},
+    "seo_store_desc": {"ru": "Зоомагазин Zoo Planeta: {address}. {hours}. Корма, наполнители, аксессуары и ветаптека. Тел. {phone}.",
+                       "uz": "Zoo Planeta zoodoʻkoni: {address}. {hours}. Yem, toʻldirgich, aksessuarlar va vetapteka. Tel. {phone}.",
+                       "en": "Zoo Planeta pet store: {address}. {hours}. Pet food, litter, accessories and vet care. Tel. {phone}."},
+    "seo_stores_title": {"ru": "Зоомагазины Zoo Planeta в Ташкенте — адреса и часы работы",
+                         "uz": "Toshkentdagi Zoo Planeta zoodoʻkonlari — manzillar va ish vaqti",
+                         "en": "Zoo Planeta pet stores in Tashkent — addresses and opening hours"},
+    "seo_vacancy_title": {"ru": "Вакансия: {name} — Zoo Planeta, Ташкент", "uz": "Vakansiya: {name} — Zoo Planeta, Toshkent",
+                          "en": "Job: {name} — Zoo Planeta, Tashkent"},
+    "seo_promo_title": {"ru": "Акция: {name} — Zoo Planeta", "uz": "Aksiya: {name} — Zoo Planeta", "en": "Offer: {name} — Zoo Planeta"},
     # home
     "quick_promos": {"ru": "Скидки этой недели", "uz": "Shu haftaning chegirmalari", "en": "This week's deals"},
     "quick_careers": {"ru": "Вакансии в магазинах", "uz": "Doʻkonlardagi vakansiyalar", "en": "Jobs in our stores"},

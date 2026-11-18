@@ -5,9 +5,9 @@ from django.urls import include, path
 from django.views.generic import TemplateView
 from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
-from wagtail.contrib.sitemaps.views import sitemap
 from wagtail.documents import urls as wagtaildocs_urls
 
+from core.sitemap import sitemap
 from core.views import health, robots_txt
 from stores.views import stores_json
 

@@ -181,6 +181,17 @@ class PromoPage(ImageMixin, Page):
     def is_active(self) -> bool:
         return self.date_from <= timezone.localdate() <= self.date_to
 
+    def seo_auto_title(self) -> str:
+        from core.ui import t
+        return t("seo_promo_title").format(name=self.title)
+
+    def seo_auto_description(self) -> str:
+        from core.templatetags.site_tags import human_date
+        from core.ui import t
+        dates = f"{t('valid')} {human_date(self.date_from, False)} — {human_date(self.date_to)}."
+        lead = f"{self.badge}: {self.summary}" if self.badge and self.summary else (self.summary or self.badge)
+        return " ".join(filter(None, [lead.rstrip(".") + "." if lead else "", dates]))
+
     @property
     def is_upcoming(self) -> bool:
         return self.date_from > timezone.localdate()
@@ -281,6 +292,16 @@ class VacancyPage(FormPageMixin, Page):
     class Meta:
         verbose_name = "Вакансия"
         verbose_name_plural = "Вакансии"
+
+    def seo_auto_title(self) -> str:
+        from core.ui import t
+        return t("seo_vacancy_title").format(name=self.title)
+
+    def seo_auto_description(self) -> str:
+        from core.ui import t
+        parts = [self.summary or self.location, f"{t('salary')}: {self.salary}" if self.salary else "",
+                 f"{t('schedule')}: {self.schedule}" if self.schedule else ""]
+        return ". ".join(p for p in parts if p) + "."
 
     def before_lead_save(self, obj):
         obj.vacancy = self

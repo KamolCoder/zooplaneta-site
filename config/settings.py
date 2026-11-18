@@ -32,7 +32,6 @@ INSTALLED_APPS = [
     "wagtail.contrib.redirects",
     "wagtail.contrib.settings",
     "wagtail.contrib.simple_translation",
-    "wagtail.contrib.sitemaps",
     "wagtail.locales",
     "wagtail.embeds",
     "wagtail.sites",
@@ -52,7 +51,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.sitemaps",
 ]
 
 MIDDLEWARE = [
@@ -144,7 +142,9 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 # ── wagtail ──────────────────────────────────────────────────────────────────
 WAGTAIL_SITE_NAME = "Zoo Planeta"
-WAGTAILADMIN_BASE_URL = os.getenv("SITE_URL", "http://localhost:8000")
+# public address of the site: canonical URLs, sitemap, Open Graph (python manage.py sync_site applies it to Wagtail)
+SITE_URL = os.getenv("SITE_URL", "http://localhost:8000").rstrip("/")
+WAGTAILADMIN_BASE_URL = SITE_URL
 WAGTAIL_ENABLE_UPDATE_CHECK = False
 WAGTAIL_ENABLE_WHATS_NEW_BANNER = False
 WAGTAIL_GRAVATAR_PROVIDER_URL = None  # no requests to gravatar.com from the CMS
@@ -174,6 +174,7 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 if not DEBUG:
     SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)
+    SECURE_REDIRECT_EXEMPT = [r"^health/$"]  # local checks over plain http
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000
