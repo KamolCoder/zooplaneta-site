@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags wagtailimages_tags site_tags %}
+{% block extra_head %}{% if page.has_coords %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endif %}
+<script type="application/ld+json">{{ jsonld|safe }}</script>{% endblock %}
+{% block content %}
+<header class="page-head" style="padding-bottom:40px">
+  <div class="container">
+    {% include "includes/crumbs.html" %}
+    <h1>Zoo Planeta · {{ page.title }}</h1>
+    <p class="lead">{{ page.address }}</p>
+  </div>
+</header>
+<section class="section-sm">
+  <div class="container store">
+    <div>
+      <div class="store-media">{% if page.image %}{% image page.image fill-1280x800 format-webp %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+      {% if page.feature_list %}<h2 class="h2" style="font-size:24px;margin:40px 0 16px">{% t "in_store" %}</h2><div class="chips">{% for f in page.feature_list %}<span>{{ f }}</span>{% endfor %}</div>{% endif %}
+      {% if page.description %}<div class="prose" style="margin-top:32px">{{ page.description|richtext }}</div>{% endif %}
+      {% if page.has_coords %}<div class="store-map" id="store-map" data-lat="{{ page.latitude|stringformat:'f' }}" data-lng="{{ page.longitude|stringformat:'f' }}" data-name="{{ page.title }}"></div>{% endif %}
+    </div>
+    <aside class="info-card">
+      <span class="status {% if page.is_open %}status-open{% else %}status-closed{% endif %}">{% if page.is_24h %}{% t "open_24" %}{% elif page.is_open %}{% t "open" %}{% else %}{% t "closed" %}{% endif %}</span>
+      <div class="info-row"><svg class="icon"><use href="#i-pin"/></svg><div><small>{% t "address" %}</small><b>{{ page.address }}</b></div></div>
+      {% if page.landmark %}<div class="info-row"><svg class="icon"><use href="#i-store"/></svg><div><small>{% t "landmark" %}</small><b>{{ page.landmark }}</b></div></div>{% endif %}
+      {% if page.metro %}<div class="info-row"><svg class="icon"><use href="#i-metro"/></svg><div><small>{% t "metro" %}</small><b>{{ page.metro }}</b></div></div>{% endif %}
+      <div class="info-row"><svg class="icon"><use href="#i-clock"/></svg><div><small>{% t "hours" %}</small><b>{% if page.is_24h %}{% t "open_24" %}{% else %}{% t "daily" %} {{ page.opens|time:"H:i" }}–{{ page.closes|time:"H:i" }}{% endif %}</b></div></div>
+      <div class="info-row"><svg class="icon"><use href="#i-phone"/></svg><div><small>{% t "phone" %}</small><b>{{ page.phone|default:settings.core.SiteSettings.phone }}</b></div></div>
+      <div class="info-actions">
+        <a class="btn btn-dark" href="{{ page.route_url }}" target="_blank" rel="noopener"><svg class="icon"><use href="#i-nav"/></svg>{% t "route" %}</a>
+        <a class="btn btn-outline" href="tel:{{ page.phone|default:settings.core.SiteSettings.phone|tel }}"><svg class="icon"><use href="#i-phone"/></svg>{% t "call" %}</a>
+      </div>
+    </aside>
+  </div>
+</section>
+{% if nearby %}
+<section class="section">
+  <div class="container">
+    <div class="section-head"><h2>{% t "nearby_stores" %}</h2>{% with parent=page.get_parent %}<a class="link-arrow" href="{% pageurl parent %}">{% t "other_stores" %}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endwith %}</div>
+    <div class="grid grid-3">
+      {% for s in nearby %}
+      <a class="feature" href="{% pageurl s %}"><h3>{{ s.title }}</h3><p>{{ s.address }}</p><p>{% if s.is_24h %}{% t "open_24" %}{% else %}{{ s.opens|time:"H:i" }}–{{ s.closes|time:"H:i" }}{% endif %}</p></a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+{% block extra_js %}{% if page.has_coords %}
+<script>window.MAP_TILES = {url: "{{ map_tile_url|escapejs }}", attribution: "{{ map_tile_attribution|escapejs }}"};</script>
+<script src="{% static 'vendor/leaflet/leaflet.js' %}" defer></script>
+<script src="{% static 'js/stores.js' %}" defer></script>{% endif %}{% endblock %}

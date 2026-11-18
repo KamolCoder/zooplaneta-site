@@ -1,0 +1,10 @@
+{% load wagtailimages_tags %}
+{% if value.title %}<div class="block-heading" style="margin-bottom:32px"><h2>{{ value.title }}</h2>{% if value.text %}<p>{{ value.text }}</p>{% endif %}</div>{% endif %}
+<div class="cat-grid">
+{% for item in value.items %}
+  <div class="cat">
+    <div class="cat-media">{% if item.image %}{% image item.image fill-600x650 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+    <div class="cat-text"><h3>{{ item.title }}</h3>{% if item.text %}<p>{{ item.text }}</p>{% endif %}</div>
+  </div>
+{% endfor %}
+</div>

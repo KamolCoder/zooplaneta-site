@@ -1,0 +1,2 @@
+{% if value.title %}<div class="block-heading" style="margin-bottom:40px"><h2>{{ value.title }}</h2></div>{% endif %}
+<div class="timeline">{% for item in value.items %}<div><b>{{ item.year }}</b><h3>{{ item.title }}</h3>{% if item.text %}<p>{{ item.text }}</p>{% endif %}</div>{% endfor %}</div>

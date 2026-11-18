@@ -1,0 +1,9 @@
+/* Wagtail admin in Zoo Planeta colours */
+:root, .w-theme-light {
+  --w-color-secondary: #111111;
+  --w-color-secondary-600: #111111;
+  --w-color-secondary-400: #2b2b2b;
+  --w-color-secondary-100: #3a3a3a;
+  --w-color-secondary-75: #4a4a4a;
+  --w-color-secondary-50: #f4f4f2;
+}

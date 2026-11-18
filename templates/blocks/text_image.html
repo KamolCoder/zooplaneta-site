@@ -1,0 +1,9 @@
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+<div class="text-image{% if value.image_left %} img-left{% endif %}">
+  <div>
+    {% if value.title %}<h2>{{ value.title }}</h2>{% endif %}
+    <div class="prose">{{ value.text|richtext }}</div>
+    {% if value.link.text and value.link|link_url %}<a class="btn btn-dark" href="{{ value.link|link_url }}">{{ value.link.text }}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
+  </div>
+  <div class="ti-media">{% if value.image %}{% image value.image fill-1000x800 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+</div>

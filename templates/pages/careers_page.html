@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags site_tags %}
+{% block content %}
+{% include "includes/page_head.html" %}
+<section class="section">
+  <div class="container">
+    <div class="section-head"><h2>{% t "vacancies" %}</h2></div>
+    {% if vacancies %}
+    <div class="vacancies">
+      {% for v in vacancies %}
+      <a class="vacancy-row" href="{% pageurl v %}">
+        <div><h3>{{ v.title }}</h3>{% if v.summary %}<p>{{ v.summary }}</p>{% endif %}</div>
+        <span class="meta">{{ v.location|default:v.get_employment_display }}</span>
+        <span class="salary">{{ v.salary }}</span>
+        <svg class="icon"><use href="#i-arrow"/></svg>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}<p class="empty">{% t "no_vacancies" %}</p>{% endif %}
+  </div>
+</section>
+{% if page.body %}<section class="section section-alt"><div class="container">{% include "includes/body.html" with body=page.body %}</div></section>{% endif %}
+<section class="section" id="form">
+  <div class="container form-wrap">
+    <div><h2>{% t "send_cv" %}</h2><p class="intro">{% t "no_vacancies" %}</p>
+      {% if settings.core.SiteSettings.hr_phone %}<p style="margin-top:20px"><a class="link-arrow" href="tel:{{ settings.core.SiteSettings.hr_phone_href }}"><svg class="icon"><use href="#i-phone"/></svg>{{ settings.core.SiteSettings.hr_phone }}</a></p>{% endif %}
+    </div>
+    <div>{% t "send_cv" as submit_label %}{% include "includes/lead_form.html" with submit_label=submit_label %}</div>
+  </div>
+</section>
+{% endblock %}
