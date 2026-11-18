@@ -1,0 +1,3 @@
+# Host crontab (crontab -e as the deploy user). Times are server time.
+# 03:20 — database + uploaded files backup, keeps the last 14 of each in /srv/zooplaneta/data/backups
+20 3 * * * cd /srv/zooplaneta-site && docker compose exec -T web python manage.py backup_db --with-files >> /var/log/zooplaneta-backup.log 2>&1

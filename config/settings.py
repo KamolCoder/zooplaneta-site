@@ -88,20 +88,25 @@ TEMPLATES = [
     },
 ]
 
-# Postgres when DB_NAME is set, SQLite for a quick local run
-if os.getenv("DB_NAME"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("DB_NAME"),
-            "USER": os.getenv("DB_USER", ""),
-            "PASSWORD": os.getenv("DB_PASS", ""),
-            "HOST": os.getenv("DB_HOST", "127.0.0.1"),
-            "PORT": os.getenv("DB_PORT", "5432"),
-        }
+# SQLite: one file, enough for an info site (few editors, a few dozen form posts a day).
+# In Docker the file lives in /app/data, mounted from the host — rebuilding the image keeps it.
+SQLITE_PATH = Path(os.getenv("SQLITE_PATH", BASE_DIR / "db.sqlite3"))
+SQLITE_PATH.parent.mkdir(parents=True, exist_ok=True)
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": SQLITE_PATH,
+        "OPTIONS": {
+            # WAL: readers never block the writer; IMMEDIATE + timeout: no "database is locked"
+            # when several gunicorn workers write at once
+            "transaction_mode": "IMMEDIATE",
+            "timeout": 20,
+            "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA foreign_keys=ON;",
+        },
     }
-else:
-    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
+}
+BACKUP_DIR = Path(os.getenv("BACKUP_DIR", SQLITE_PATH.parent / "backups"))
+BACKUP_KEEP = int(os.getenv("BACKUP_KEEP", "14"))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -7,7 +7,9 @@ Company website of the Zoo Planeta pet store chain (Tashkent, 23 stores). Info o
 Separate product: nothing here depends on ZooCorpApp (stores can be imported from its export).
 
 ## Stack
-Django 5.2 + Wagtail 7.4, Postgres in prod (SQLite when `DB_NAME` is empty), whitenoise, gunicorn, Docker.
+Django 5.2 + Wagtail 7.4, SQLite (WAL, IMMEDIATE transactions; file in `/app/data` mounted from the host
+`/srv/zooplaneta`, nightly `backup_db --with-files`), whitenoise, gunicorn, Docker.
+Low-traffic site: keep it small — container 384 MB / 0.5 CPU, gunicorn 2 workers × 2 threads.
 No frontend build: hand-written `static/css/site.css`, vanilla JS (`static/js/site.js`, `stores.js`),
 self-hosted Onest font and Leaflet (no CDNs).
 

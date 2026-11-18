@@ -1,26 +1,21 @@
+# Everything that must survive a rebuild lives on the host in ZP_DATA_DIR (default /srv/zooplaneta):
+#   data/      SQLite database + data/backups/
+#   media/     uploaded images and documents
+#   private/   CVs (never served by nginx)
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
   web:
     build: .
     restart: unless-stopped
     env_file: .env
-    depends_on: [db]
+    # low-traffic site: keep it small so it never competes with other services on the server
+    mem_limit: 384m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
     ports:
       - "127.0.0.1:8030:8000"
     volumes:
-      - media:/app/media
-      - private:/app/private
-
-volumes:
-  pgdata:
-  media:
-  private:
+      - ${ZP_DATA_DIR:-/srv/zooplaneta}/data:/app/data
+      - ${ZP_DATA_DIR:-/srv/zooplaneta}/media:/app/media
+      - ${ZP_DATA_DIR:-/srv/zooplaneta}/private:/app/private
