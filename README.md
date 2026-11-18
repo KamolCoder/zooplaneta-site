@@ -1,7 +1,7 @@
 # Zoo Planeta — сайт компании
 
 Ознакомительный сайт сети зоомагазинов Zoo Planeta (Ташкент): RU / UZ / EN, без интернет-магазина.
-Django 5.2 + Wagtail 7.4 (CMS), Postgres, собственный CSS без сборки. Шрифт Onest и Leaflet лежат в репозитории (внешних CDN нет).
+Django 5.2 + Wagtail 7.4 (CMS), SQLite, собственный CSS без сборки. Шрифт Onest и Leaflet лежат в репозитории (внешних CDN нет).
 
 ## Разделы
 
@@ -30,7 +30,7 @@ DEBUG=True python manage.py runserver
 
 Сайт: http://localhost:8000/ru/ · CMS: http://localhost:8000/cms/
 
-Без `DB_NAME` используется SQLite; для Postgres задайте `DB_*` в `.env` (см. `.env.example`).
+База — SQLite (`db.sqlite3` рядом с `manage.py`, путь меняется через `SQLITE_PATH`).
 
 ## Работа в CMS
 
@@ -68,13 +68,45 @@ python manage.py import_stores stores.json
 
 ## Продакшен
 
+Один контейнер, без отдельной базы. Всё, что должно пережить пересборку, лежит на хосте в `/srv/zooplaneta`
+(другой путь — переменная `ZP_DATA_DIR`):
+
+| Папка на хосте | В контейнере | Что там |
+|---|---|---|
+| `/srv/zooplaneta/data` | `/app/data` | база `db.sqlite3` и `backups/` |
+| `/srv/zooplaneta/media` | `/app/media` | загруженные фото и документы (отдаёт nginx) |
+| `/srv/zooplaneta/private` | `/app/private` | резюме (только через CMS) |
+
 ```bash
+sudo mkdir -p /srv/zooplaneta/{data,media,private}
 cp .env.example .env        # заполнить
 docker compose up -d --build
 docker compose exec web python manage.py createsuperuser
 ```
 
-nginx — `deploy/nginx.conf` (порт 8030, `/media/` из docker volume). Резюме лежат в отдельном volume `private` и через nginx не отдаются.
+Обновление: `git pull && docker compose up -d --build` — база и файлы остаются (миграции выполняются при старте).
+**Не запускайте** `docker compose down -v` и не удаляйте `/srv/zooplaneta`.
+
+Ресурсы: лимит контейнера 384 МБ и 0.5 CPU, gunicorn 2 процесса × 2 потока (~270 МБ). Для большей нагрузки —
+`WEB_CONCURRENCY` / `WEB_THREADS` в `.env` и `mem_limit` в `docker-compose.yml`.
+
+nginx — `deploy/nginx.conf` (порт 8030, `/media/` из `/srv/zooplaneta/media`).
+
+### Бэкап
+
+`deploy/crontab` — каждую ночь `backup_db --with-files`: копия базы (онлайн-бэкап SQLite с проверкой целостности)
+и архив `media` + `private` в `/srv/zooplaneta/data/backups`, хранятся последние 14. Папку `backups` копируйте
+и за пределы сервера (диск может умереть вместе с бэкапами).
+
+Восстановление:
+
+```bash
+docker compose stop web
+cp /srv/zooplaneta/data/backups/db-YYYYMMDD-HHMMSS.sqlite3 /srv/zooplaneta/data/db.sqlite3
+rm -f /srv/zooplaneta/data/db.sqlite3-wal /srv/zooplaneta/data/db.sqlite3-shm
+tar -xzf /srv/zooplaneta/data/backups/files-YYYYMMDD-HHMMSS.tar.gz -C /srv/zooplaneta   # если нужны и файлы
+docker compose start web
+```
 
 ## Тесты
 

@@ -2,7 +2,7 @@ from django.core import mail
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import TestCase, TransactionTestCase, override_settings
 
 from leads.models import Feedback, JobApplication, PartnerRequest
 from pages.models import HomePage, PromoPage, VacancyPage
@@ -157,3 +157,24 @@ class CmsTests(TestCase):
         self.assertIn("w-theme-light", html)
         for text in ("Быстрые действия", "Новые заявки", "Действующие акции", "Мадина", "Zoo Planeta CMS"):
             self.assertIn(text, html)
+
+
+class BackupTests(TransactionTestCase):
+    def test_backup_and_rotation(self):
+        import sqlite3
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp, override_settings(BACKUP_DIR=tmp, BACKUP_KEEP=2,
+                                                                     MEDIA_ROOT=Path(tmp) / "m",
+                                                                     PRIVATE_MEDIA_ROOT=Path(tmp) / "p"):
+            (Path(tmp) / "db-20000101-000000.sqlite3").write_bytes(b"old")
+            (Path(tmp) / "db-20000102-000000.sqlite3").write_bytes(b"old")
+            Feedback.objects.create(name="X", phone="1", message="m")
+            call_command("backup_db", "--with-files", stdout=open("/dev/null", "w"))
+            dbs = sorted(Path(tmp).glob("db-*.sqlite3"))
+            self.assertEqual(len(dbs), 2)  # oldest removed
+            self.assertFalse((Path(tmp) / "db-20000101-000000.sqlite3").exists())
+            con = sqlite3.connect(dbs[-1])
+            self.assertEqual(con.execute("select count(*) from leads_feedback").fetchone()[0], 1)
+            con.close()
+            self.assertEqual(len(list(Path(tmp).glob("files-*.tar.gz"))), 1)
