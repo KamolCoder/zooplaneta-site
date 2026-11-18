@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    depends_on: [db]
+    ports:
+      - "127.0.0.1:8030:8000"
+    volumes:
+      - media:/app/media
+      - private:/app/private
+
+volumes:
+  pgdata:
+  media:
+  private:

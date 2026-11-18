@@ -1,0 +1,3 @@
+{% load wagtailcore_tags %}
+{% if value.title %}<div class="block-heading" style="margin-bottom:24px"><h2>{{ value.title }}</h2></div>{% endif %}
+<div class="faq">{% for item in value.items %}<details><summary>{{ item.question }}</summary><div class="prose">{{ item.answer|richtext }}</div></details>{% endfor %}</div>

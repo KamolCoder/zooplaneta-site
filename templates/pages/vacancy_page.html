@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags site_tags %}
+{% block content %}
+<header class="page-head">
+  <div class="container">
+    {% include "includes/crumbs.html" %}
+    <h1>{{ page.title }}</h1>
+    {% if page.summary %}<p class="lead">{{ page.summary }}</p>{% endif %}
+  </div>
+</header>
+<section class="section">
+  <div class="container vacancy">
+    <div class="prose">
+      {% if not page.is_open %}<div class="alert alert-error">{% t "position_closed" %}</div>{% endif %}
+      {% if page.duties %}<h2>{% t "duties" %}</h2>{{ page.duties|richtext }}{% endif %}
+      {% if page.requirements %}<h2>{% t "requirements" %}</h2>{{ page.requirements|richtext }}{% endif %}
+      {% if page.conditions %}<h2>{% t "conditions" %}</h2>{{ page.conditions|richtext }}{% endif %}
+    </div>
+    <aside class="info-card">
+      <div class="facts">
+        {% if page.salary %}<div><small>{% t "salary" %}</small><b>{{ page.salary }}</b></div>{% endif %}
+        <div><small>{% t "schedule" %}</small><b>{{ page.schedule|default:page.get_employment_display }}</b></div>
+        {% if page.location %}<div><small>{% t "location" %}</small><b>{{ page.location }}</b></div>{% endif %}
+      </div>
+      {% if page.is_open %}<a class="btn btn-dark btn-block" href="#form">{% t "apply" %}</a>{% endif %}
+      {% with parent=page.get_parent %}<a class="link-arrow" href="{% pageurl parent %}" style="justify-self:start">{% t "back_to_vacancies" %}</a>{% endwith %}
+    </aside>
+  </div>
+</section>
+{% if page.is_open %}
+<section class="section section-alt" id="form">
+  <div class="container form-wrap">
+    <div><h2>{% t "apply" %}</h2><p class="intro">{{ page.title }}</p></div>
+    <div>{% t "apply" as submit_label %}{% include "includes/lead_form.html" with submit_label=submit_label %}</div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

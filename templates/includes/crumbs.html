@@ -1,0 +1,7 @@
+{% load site_tags wagtailcore_tags %}
+<nav class="crumbs" aria-label="breadcrumbs">
+  {% for p in page.get_ancestors %}{% if not p.is_root %}{% with sp=p.specific %}
+    <a href="{% pageurl sp %}">{% if sp.depth == 2 %}{% t "home" %}{% else %}{{ sp.title }}{% endif %}</a><span aria-hidden="true">/</span>
+  {% endwith %}{% endif %}{% endfor %}
+  <span>{{ page.title }}</span>
+</nav>

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load site_tags %}
+{% block title %}404 — Zoo Planeta{% endblock %}
+{% block content %}
+<section class="notfound"><div class="container">
+  <b>404</b><h1>{% t "page_not_found" %}</h1><p>{% t "page_not_found_text" %}</p>
+  {% home_page as home %}<a class="btn btn-dark" href="{% if home %}{{ home.url }}{% else %}/{% endif %}">{% t "to_home" %}</a>
+</div></section>
+{% endblock %}

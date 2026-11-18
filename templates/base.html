@@ -1,0 +1,133 @@
+{% load static wagtailcore_tags wagtailimages_tags wagtailuserbar site_tags %}<!DOCTYPE html>
+{% lang as cur_lang %}{% home_page as home %}{% find_page "stores.StoreIndexPage" as stores_index %}{% find_page "pages.CareersPage" as careers %}{% find_page "pages.PartnersPage" as partners %}{% find_page "pages.ContactPage" as contact_page %}{% find_page "pages.PromoIndexPage" as promo_index %}{% find_page "pages.NewsIndexPage" as news_index %}
+<html lang="{{ cur_lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% if page.seo_title %}{{ page.seo_title }}{% elif page and not page.depth == 2 %}{{ page.title }} — Zoo Planeta{% else %}Zoo Planeta{% endif %}{% endblock %}</title>
+{% if page.search_description %}<meta name="description" content="{{ page.search_description }}">{% endif %}
+{% if page.full_url %}<link rel="canonical" href="{{ page.full_url }}">
+{% for p in page.get_translations.live %}<link rel="alternate" hreflang="{{ p.locale.language_code }}" href="{{ p.full_url }}">
+{% endfor %}<link rel="alternate" hreflang="{{ cur_lang }}" href="{{ page.full_url }}">{% endif %}
+<meta property="og:site_name" content="Zoo Planeta">
+<meta property="og:title" content="{% firstof page.seo_title page.title 'Zoo Planeta' %}">
+{% if page.search_description %}<meta property="og:description" content="{{ page.search_description }}">{% endif %}
+{% if page.image %}{% image page.image fill-1200x630 format-jpeg as og %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ og.url }}">{% else %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo.png' %}">{% endif %}
+<meta name="theme-color" content="#FDCC27">
+<link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
+<link rel="preload" href="{% static 'fonts/onest-cyrillic-700-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+<link rel="stylesheet" href="{% static 'css/site.css' %}">
+{% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+{% include "includes/icons.html" %}
+<a class="skip" href="#main">{% t "skip" %}</a>
+{% language_links as langs %}
+
+<div class="topbar">
+  <div class="container">
+    <div class="topbar-left">
+      <a class="topbar-phone" href="tel:{{ settings.core.SiteSettings.phone_href }}"><svg class="icon"><use href="#i-phone"/></svg>{{ settings.core.SiteSettings.phone }}</a>
+      {% if settings.core.SiteSettings.phone_hours %}<span class="topbar-hours">{% t "call_center" %} · {% t "daily" %} {{ settings.core.SiteSettings.phone_hours }}</span>{% endif %}
+    </div>
+    <div class="topbar-right">
+      {% if partners %}<a class="topbar-hide-md" href="{% pageurl partners %}">{% t "for_partners" %}</a>{% endif %}
+      {% if careers %}<a class="topbar-hide-md" href="{% pageurl careers %}">{{ careers.title }}</a>{% endif %}
+      <nav class="lang-switch" aria-label="Language">
+        {% for l in langs %}<a href="{{ l.url }}" hreflang="{{ l.code }}" lang="{{ l.code }}" title="{{ l.name }}"{% if l.active %} class="active" aria-current="true"{% endif %}>{{ l.label }}</a>{% endfor %}
+      </nav>
+    </div>
+  </div>
+</div>
+
+<header class="header">
+  <div class="container">
+    <a class="brand" href="{% if home %}{% pageurl home %}{% else %}/{% endif %}" aria-label="Zoo Planeta"><img src="{% static 'img/logo.png' %}" alt="Zoo Planeta" width="54" height="54"></a>
+    {% menu_items as items %}
+    <nav class="nav" aria-label="Main">
+      {% for item in items %}<a href="{% pageurl item %}"{% if page|in_section:item %} class="active" aria-current="page"{% endif %}>{{ item.title }}</a>{% endfor %}
+    </nav>
+    {% if stores_index %}<a class="btn btn-dark btn-sm btn-find" href="{% pageurl stores_index %}"><svg class="icon"><use href="#i-pin"/></svg>{% t "find_store" %}</a>{% endif %}
+    <button class="burger" type="button" aria-label="{% t 'menu' %}" aria-controls="mnav" aria-expanded="false" data-open-nav><svg class="icon"><use href="#i-menu"/></svg></button>
+  </div>
+</header>
+
+<div class="mobile-nav" id="mnav" aria-hidden="true">
+  <div class="mobile-nav-head">
+    <a class="brand" href="{% if home %}{% pageurl home %}{% else %}/{% endif %}"><img src="{% static 'img/logo.png' %}" alt="Zoo Planeta" width="46" height="46"></a>
+    <button class="burger" type="button" aria-label="{% t 'close' %}" data-close-nav style="display:inline-flex"><svg class="icon"><use href="#i-close"/></svg></button>
+  </div>
+  <div class="mobile-nav-body">
+    {% for item in items %}<a href="{% pageurl item %}">{{ item.title }}<svg class="icon"><use href="#i-chevron"/></svg></a>{% endfor %}
+    {% if stores_index %}<a class="btn btn-dark btn-block" href="{% pageurl stores_index %}"><svg class="icon"><use href="#i-pin"/></svg>{% t "find_store" %}</a>{% endif %}
+    <div class="mobile-nav-foot">
+      <a class="topbar-phone" style="color:var(--black);font-size:20px" href="tel:{{ settings.core.SiteSettings.phone_href }}"><svg class="icon"><use href="#i-phone"/></svg>{{ settings.core.SiteSettings.phone }}</a>
+      <nav class="lang-switch" aria-label="Language">{% for l in langs %}<a href="{{ l.url }}" lang="{{ l.code }}"{% if l.active %} class="active"{% endif %}>{{ l.label }}</a>{% endfor %}</nav>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="{% static 'img/logo.png' %}" alt="Zoo Planeta" width="64" height="64" loading="lazy">
+        {% if home.search_description %}<p>{{ home.search_description }}</p>{% endif %}
+        <div class="socials">
+          {% with s=settings.core.SiteSettings %}
+          {% if s.telegram %}<a href="https://t.me/{{ s.telegram }}" target="_blank" rel="noopener" aria-label="Telegram"><svg class="icon"><use href="#i-telegram"/></svg></a>{% endif %}
+          {% if s.instagram %}<a href="https://instagram.com/{{ s.instagram }}" target="_blank" rel="noopener" aria-label="Instagram"><svg class="icon"><use href="#i-instagram"/></svg></a>{% endif %}
+          {% if s.facebook %}<a href="{{ s.facebook }}" target="_blank" rel="noopener" aria-label="Facebook"><svg class="icon"><use href="#i-facebook"/></svg></a>{% endif %}
+          {% if s.youtube %}<a href="{{ s.youtube }}" target="_blank" rel="noopener" aria-label="YouTube"><svg class="icon"><use href="#i-youtube"/></svg></a>{% endif %}
+          {% endwith %}
+        </div>
+      </div>
+      <div>
+        <h4>{% t "for_customers" %}</h4>
+        <ul>
+          {% if stores_index %}<li><a href="{% pageurl stores_index %}">{{ stores_index.title }}</a></li>{% endif %}
+          {% if promo_index %}<li><a href="{% pageurl promo_index %}">{{ promo_index.title }}</a></li>{% endif %}
+          {% if contact_page %}<li><a href="{% pageurl contact_page %}">{{ contact_page.title }}</a></li>{% endif %}
+        </ul>
+      </div>
+      <div>
+        <h4>{% t "company" %}</h4>
+        <ul>
+          {% for item in items %}{% if item|page_type == "StandardPage" %}<li><a href="{% pageurl item %}">{{ item.title }}</a></li>{% endif %}{% endfor %}
+          {% if news_index %}<li><a href="{% pageurl news_index %}">{{ news_index.title }}</a></li>{% endif %}
+          {% if careers %}<li><a href="{% pageurl careers %}">{{ careers.title }}</a></li>{% endif %}
+        </ul>
+      </div>
+      <div>
+        <h4>{% t "for_partners" %}</h4>
+        <ul>
+          {% if partners %}<li><a href="{% pageurl partners %}">{{ partners.title }}</a></li>{% endif %}
+          <li><a href="mailto:{{ settings.core.SiteSettings.partners_email }}">{{ settings.core.SiteSettings.partners_email }}</a></li>
+        </ul>
+      </div>
+      <div class="footer-contacts">
+        <h4>{% t "contacts" %}</h4>
+        <ul>
+          <li><a class="footer-phone" href="tel:{{ settings.core.SiteSettings.phone_href }}">{{ settings.core.SiteSettings.phone }}</a></li>
+          <li><a href="mailto:{{ settings.core.SiteSettings.email }}">{{ settings.core.SiteSettings.email }}</a></li>
+          {% if settings.core.SiteSettings.address %}<li>{{ settings.core.SiteSettings.address }}</li>{% endif %}
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© {% now "Y" %} {{ settings.core.SiteSettings.legal_name }}{% if settings.core.SiteSettings.tax_id %} · ИНН {{ settings.core.SiteSettings.tax_id }}{% endif %}. {% t "all_rights" %}</span>
+      <span>zooplaneta.uz</span>
+    </div>
+  </div>
+</footer>
+
+{% wagtailuserbar "bottom-left" %}
+<script src="{% static 'js/site.js' %}" defer></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

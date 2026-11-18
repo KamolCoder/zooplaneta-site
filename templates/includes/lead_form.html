@@ -1,0 +1,27 @@
+{% load site_tags %}
+{% if sent %}
+<div class="success" role="status">
+  <svg class="icon"><use href="#i-check"/></svg>
+  <div><h3>{% t "f_sent_title" %}</h3><p>{% t "f_sent_text" %}</p></div>
+</div>
+{% else %}
+<form method="post" enctype="multipart/form-data" class="form" novalidate>
+  {% csrf_token %}
+  {% if form.errors %}<div class="alert alert-error full" role="alert">{% for e in form.non_field_errors %}{{ e }} {% empty %}{% t "f_errors" %}{% endfor %}</div>{% endif %}
+  {% for field in form %}
+    {% if field.name == "company_url" %}
+      <div class="hp" aria-hidden="true"><label>Website<input type="text" name="company_url" tabindex="-1" autocomplete="off"></label></div>
+    {% elif field.name == "consent" %}
+      <div class="full">
+        <label class="check"><input type="checkbox" name="consent" required {% if field.value %}checked{% endif %}> <span>{{ field.label }}</span></label>
+        {% for e in field.errors %}<div class="err" style="color:var(--red);font-size:13px;margin-top:6px">{{ e }}</div>{% endfor %}
+      </div>
+    {% elif field.name in "message resume category" %}
+      {% include "includes/field.html" with full=True %}
+    {% else %}
+      {% include "includes/field.html" %}
+    {% endif %}
+  {% endfor %}
+  <div class="full"><button type="submit" class="btn btn-dark">{{ submit_label|default:"" }}{% if not submit_label %}{% t "f_send" %}{% endif %}</button></div>
+</form>
+{% endif %}

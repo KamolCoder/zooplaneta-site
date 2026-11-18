@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load site_tags %}
+{% block content %}
+{% include "includes/page_head.html" %}
+{% with s=settings.core.SiteSettings %}
+<section class="section">
+  <div class="container">
+    <div class="contact-cards">
+      <a class="contact-card" href="tel:{{ s.phone_href }}"><svg class="icon"><use href="#i-phone"/></svg><small>{% t "call_center" %}{% if s.phone_hours %}, {{ s.phone_hours }}{% endif %}</small><b>{{ s.phone }}</b></a>
+      <a class="contact-card" href="mailto:{{ s.email }}"><svg class="icon"><use href="#i-mail"/></svg><small>E-mail</small><b>{{ s.email }}</b></a>
+      {% if s.telegram %}<a class="contact-card" href="https://t.me/{{ s.telegram }}" target="_blank" rel="noopener"><svg class="icon"><use href="#i-telegram"/></svg><small>Telegram</small><b>@{{ s.telegram }}</b></a>{% endif %}
+      <div class="contact-card"><svg class="icon"><use href="#i-building"/></svg><small>{% t "head_office" %}</small><b>{{ s.address }}</b></div>
+    </div>
+    {% if page.body %}<div style="margin-top:72px">{% include "includes/body.html" with body=page.body %}</div>{% endif %}
+  </div>
+</section>
+<section class="section section-alt" id="form">
+  <div class="container form-wrap">
+    <div><h2>{% t "feedback_form" %}</h2></div>
+    <div>{% include "includes/lead_form.html" %}</div>
+  </div>
+</section>
+{% endwith %}
+{% endblock %}

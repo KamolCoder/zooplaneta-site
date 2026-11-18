@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load site_tags %}
+{% block content %}
+{% include "includes/page_head.html" %}
+<section class="section">
+  <div class="container">
+    {% if active %}<div class="grid grid-4">{% for promo in active %}{% include "includes/promo_card.html" %}{% endfor %}</div>
+    {% else %}<p class="empty">{% t "no_promos" %}</p>{% endif %}
+    {% if upcoming %}<div class="grid grid-4" style="margin-top:24px">{% for promo in upcoming %}{% include "includes/promo_card.html" %}{% endfor %}</div>{% endif %}
+    <p class="note">{% t "promo_note" %}</p>
+  </div>
+</section>
+{% if archive %}
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head"><h2>{% t "promo_archive" %}</h2></div>
+    <div class="grid grid-4">{% for promo in archive %}{% include "includes/promo_card.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

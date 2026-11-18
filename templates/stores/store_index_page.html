@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags site_tags %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
+{% block content %}
+<header class="page-head" style="padding-bottom:40px">
+  <div class="container">
+    {% include "includes/crumbs.html" %}
+    <h1>{{ page.title }}</h1>
+    {% if page.intro %}<p class="lead">{{ page.intro }}</p>{% endif %}
+  </div>
+</header>
+<section class="section-sm" style="padding-top:32px">
+  <div class="container" data-store-finder>
+    <div class="store-tools">
+      <label class="field-search"><svg class="icon"><use href="#i-search"/></svg><span class="sr-only">{% t "search" %}</span><input type="search" data-q value="{{ query }}" placeholder="{% t 'search_placeholder' %}" autocomplete="off"></label>
+      {% if districts|length > 1 %}<select class="select" data-district aria-label="{% t 'district' %}"><option value="">{% t "all_districts" %}</option>{% for d in districts %}<option>{{ d }}</option>{% endfor %}</select>{% endif %}
+      <button class="toggle" type="button" data-open aria-pressed="false"><svg class="icon"><use href="#i-clock"/></svg>{% t "open_now" %}</button>
+      <button class="toggle" type="button" data-near aria-pressed="false"><svg class="icon"><use href="#i-nav"/></svg>{% t "near_me" %}</button>
+    </div>
+    <div class="view-tabs" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-view="list">{% t "store_list" %}</button>
+      <button type="button" role="tab" aria-selected="false" data-view="map">{% t "store_map" %}</button>
+    </div>
+    <p class="store-count" aria-live="polite" data-count></p>
+    <div class="store-layout" data-view="list">
+      <div class="store-list" data-list>
+        {% for s in stores %}
+        <article class="store-item" data-id="{{ s.pk }}">
+          <div class="store-item-top">
+            <h3><a href="{% pageurl s %}">{{ s.title }}</a></h3>
+            <span class="dist" data-dist></span>
+          </div>
+          <p class="addr">{{ s.address }}</p>
+          {% if s.landmark %}<p class="sub">{% t "landmark" %}: {{ s.landmark }}</p>{% endif %}
+          <div class="store-item-foot">
+            <span class="status {% if s.is_open %}status-open{% else %}status-closed{% endif %}" data-status>{% if s.is_24h %}{% t "open_24" %}{% elif s.is_open %}{% t "open" %}{% else %}{% t "closed" %}{% endif %}</span>
+            <span class="muted">{% if not s.is_24h %}{{ s.opens|time:"H:i" }}–{{ s.closes|time:"H:i" }}{% endif %}</span>
+            <a href="{{ s.route_url }}" target="_blank" rel="noopener"><svg class="icon"><use href="#i-nav"/></svg>{% t "route" %}</a>
+            {% if s.phone %}<a href="tel:{{ s.phone|tel }}"><svg class="icon"><use href="#i-phone"/></svg>{{ s.phone }}</a>{% endif %}
+          </div>
+        </article>
+        {% endfor %}
+        <p class="empty" data-empty hidden>{% t "nothing_found" %}</p>
+      </div>
+      <div class="map" id="map" role="region" aria-label="{% t 'store_map' %}"></div>
+    </div>
+  </div>
+</section>
+{{ stores_data|json_script:"stores-data" }}
+{% endblock %}
+{% block extra_js %}
+<script id="finder-i18n" type="application/json">{"open":"{% t 'open' %}","closed":"{% t 'closed' %}","open24":"{% t 'open_24' %}","route":"{% t 'route' %}","more":"{% t 'more' %}","km":"{% t 'km' %}","geoFail":"{% t 'geo_fail' %}","count":"{% t 'stores_in_tashkent' %}"}</script>
+<script>window.MAP_TILES = {url: "{{ map_tile_url|escapejs }}", attribution: "{{ map_tile_attribution|escapejs }}"};</script>
+<script src="{% static 'vendor/leaflet/leaflet.js' %}" defer></script>
+<script src="{% static 'js/stores.js' %}" defer></script>
+{% endblock %}

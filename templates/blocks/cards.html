@@ -1,0 +1,17 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+{% if value.title %}<div class="block-heading" style="margin-bottom:32px"><h2>{{ value.title }}</h2>{% if value.text %}<p>{{ value.text }}</p>{% endif %}</div>{% endif %}
+<div class="grid grid-{{ value.columns }}">
+{% for item in value.items %}
+  {% if value.style == "photo" %}
+  {% if item.page %}<a class="card" href="{% pageurl item.page.localized %}">{% else %}<div class="card">{% endif %}
+    <div class="card-media">{% if item.image %}{% image item.image fill-640x480 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+    <div class="card-body"><h3>{{ item.title }}</h3>{% if item.text %}<p>{{ item.text }}</p>{% endif %}</div>
+  {% if item.page %}</a>{% else %}</div>{% endif %}
+  {% else %}
+  {% if item.page %}<a class="feature" href="{% pageurl item.page.localized %}">{% else %}<div class="feature">{% endif %}
+    {% if value.style == "numbered" %}<span class="feature-num">{{ forloop.counter }}</span>{% endif %}
+    <h3>{{ item.title }}</h3>{% if item.text %}<p>{{ item.text }}</p>{% endif %}
+  {% if item.page %}</a>{% else %}</div>{% endif %}
+  {% endif %}
+{% endfor %}
+</div>

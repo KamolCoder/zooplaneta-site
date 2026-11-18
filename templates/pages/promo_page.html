@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+{% block content %}
+<section class="section-sm">
+  <div class="container">
+    {% include "includes/crumbs.html" %}
+    <div class="promo">
+      <div class="promo-media">
+        {% if page.image %}{% image page.image fill-1200x900 format-webp %}{% else %}{% include "includes/ph.html" with yellow=True %}{% endif %}
+        {% if page.badge and not page.is_over %}<span class="badge">{{ page.badge }}</span>{% endif %}
+      </div>
+      <div class="promo-info">
+        <span class="promo-dates"><svg class="icon"><use href="#i-calendar"/></svg>{% if page.is_over %}{% t "promo_ended" %}{% else %}{{ page.date_from|human_date:False }} — {{ page.date_to|human_date }}{% endif %}</span>
+        <h1>{{ page.title }}</h1>
+        {% if page.summary %}<p class="lead" style="font-size:19px;color:#444">{{ page.summary }}</p>{% endif %}
+        {% if page.new_price %}
+        <div class="price">
+          {% if page.old_price %}<div><span>{% t "price_old" %}</span><s>{{ page.old_price }}</s></div>{% endif %}
+          <div><span>{% t "price_new" %}</span><b>{{ page.new_price }}</b></div>
+        </div>
+        {% endif %}
+        {% if page.body %}<div class="prose" style="margin-top:20px">{{ page.body|richtext }}</div>{% endif %}
+        {% find_page "stores.StoreIndexPage" as stores_index %}
+        {% if stores_index and not page.is_over %}<a class="btn btn-dark" style="margin-top:28px" href="{% pageurl stores_index %}"><svg class="icon"><use href="#i-pin"/></svg>{% t "find_store" %}</a>{% endif %}
+        <p class="note">{% t "promo_note" %}</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

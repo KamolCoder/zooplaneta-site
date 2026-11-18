@@ -1,0 +1,18 @@
+{% load wagtailimages_tags %}
+<header class="page-head">
+  <div class="container">
+    {% include "includes/crumbs.html" %}
+    {% if page.image %}
+    <div class="page-head-split">
+      <div>
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}<p class="lead">{{ page.intro }}</p>{% endif %}
+      </div>
+      <div class="media">{% image page.image fill-960x720 format-webp %}</div>
+    </div>
+    {% else %}
+      <h1>{{ page.title }}</h1>
+      {% if page.intro %}<p class="lead">{{ page.intro }}</p>{% endif %}
+    {% endif %}
+  </div>
+</header>

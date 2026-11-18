@@ -1,0 +1,1 @@
+{% load wagtailimages_tags %}<div class="block-image{% if value.wide %} wide{% endif %}"><figure>{% image value.image width-1600 format-webp loading="lazy" %}{% if value.caption %}<figcaption>{{ value.caption }}</figcaption>{% endif %}</figure></div>

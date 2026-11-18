@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+{% block content %}
+<section class="hero">
+  <div class="container">
+    {% if page.slides %}
+    <div class="slider" data-slider>
+      <div class="slides">
+        {% for block in page.slides %}{% with s=block.value %}
+        <div class="slide slide-{{ s.theme }}{% if forloop.first %} is-active{% endif %}" role="group" aria-roledescription="slide" aria-label="{{ forloop.counter }} / {{ page.slides|length }}">
+          <div class="slide-text">
+            {% if forloop.first %}<h1>{{ s.title }}</h1>{% else %}<h2>{{ s.title }}</h2>{% endif %}
+            {% if s.text %}<p>{{ s.text }}</p>{% endif %}
+            {% if s.link.text and s.link|link_url %}<a class="btn {% if s.theme == 'dark' %}btn-yellow{% else %}btn-dark{% endif %}" href="{{ s.link|link_url }}">{{ s.link.text }}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
+          </div>
+          <div class="slide-media">{% if s.image %}{% image s.image fill-1200x960 format-webp %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+        </div>
+        {% endwith %}{% endfor %}
+      </div>
+      {% if page.slides|length > 1 %}
+      <div class="slider-ui">
+        <button class="slider-arrow" type="button" data-prev aria-label="{% t 'prev' %}"><svg class="icon"><use href="#i-arrow-left"/></svg></button>
+        <div class="slider-dots">{% for b in page.slides %}<button type="button" aria-label="{{ forloop.counter }}"{% if forloop.first %} class="is-active"{% endif %}></button>{% endfor %}</div>
+        <button class="slider-arrow" type="button" data-next aria-label="{% t 'next' %}"><svg class="icon"><use href="#i-arrow"/></svg></button>
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+      <h1 class="sr-only">{{ page.title }}</h1>
+    {% endif %}
+
+    {% find_page "pages.CareersPage" as careers %}{% find_page "pages.PartnersPage" as partners %}
+    <nav class="quick" aria-label="Quick links">
+      {% if store_index %}<a href="{% pageurl store_index %}"><span class="quick-ic"><svg class="icon"><use href="#i-store"/></svg></span><span><b>{{ store_index.title }}</b><span>{{ store_count }} {% t "stores_in_tashkent" %}</span></span></a>{% endif %}
+      {% if promo_index %}<a href="{% pageurl promo_index %}"><span class="quick-ic"><svg class="icon"><use href="#i-tag"/></svg></span><span><b>{{ promo_index.title }}</b><span>{% t "quick_promos" %}</span></span></a>{% endif %}
+      {% if careers %}<a href="{% pageurl careers %}"><span class="quick-ic"><svg class="icon"><use href="#i-work"/></svg></span><span><b>{{ careers.title }}</b><span>{% t "quick_careers" %}</span></span></a>{% endif %}
+      {% if partners %}<a href="{% pageurl partners %}"><span class="quick-ic"><svg class="icon"><use href="#i-partner"/></svg></span><span><b>{{ partners.title }}</b><span>{% t "quick_partners" %}</span></span></a>{% endif %}
+    </nav>
+  </div>
+</section>
+
+{% if page.show_promos and promos %}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div><h2>{% t "current_promos" %}</h2></div>
+      {% if promo_index %}<a class="link-arrow" href="{% pageurl promo_index %}">{% t "all_promos" %}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
+    </div>
+    <div class="grid grid-4">{% for promo in promos %}{% include "includes/promo_card.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+
+{% if page.show_store_finder and store_index %}
+<section class="section section-dark">
+  <div class="container finder">
+    <div>
+      <h2>{% t "finder_title" %}</h2>
+      <p>{% t "finder_text" %}</p>
+      <form class="finder-form" action="{% pageurl store_index %}" method="get" role="search">
+        <label class="field-search"><svg class="icon"><use href="#i-search"/></svg><span class="sr-only">{% t "search" %}</span><input type="search" name="q" placeholder="{% t 'search_placeholder' %}" autocomplete="off"></label>
+        <button class="btn btn-yellow" type="submit">{% t "search" %}</button>
+        <a class="btn btn-ghost-light" href="{% pageurl store_index %}?near=1"><svg class="icon"><use href="#i-nav"/></svg>{% t "near_me" %}</a>
+      </form>
+    </div>
+    <div class="finder-count">
+      <b>{{ store_count }}</b>
+      <span>{% t "stores_in_tashkent" %}</span>
+      <div class="district-chips">{% regroup store_index.stores|dictsort:"district" by district as by_district %}{% for d in by_district %}{% if d.grouper %}<a href="{% pageurl store_index %}?q={{ d.grouper|urlencode }}">{{ d.grouper }}</a>{% endif %}{% endfor %}</div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if page.body %}
+<section class="section">
+  <div class="container">{% for block in page.body %}<div class="block block-{{ block.block_type }}">{% include_block block %}</div>{% endfor %}</div>
+</section>
+{% endif %}
+
+{% if page.show_news and news %}
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head">
+      <div><h2>{% t "news" %}</h2></div>
+      {% if news_index %}<a class="link-arrow" href="{% pageurl news_index %}">{% t "all_news" %}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
+    </div>
+    <div class="grid grid-3">{% for item in news %}{% include "includes/news_card.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

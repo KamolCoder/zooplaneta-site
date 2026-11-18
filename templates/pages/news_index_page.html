@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load site_tags %}
+{% block content %}
+{% include "includes/page_head.html" %}
+<section class="section">
+  <div class="container">
+    <div class="grid grid-3">{% for item in news_page %}{% include "includes/news_card.html" %}{% endfor %}</div>
+    {% if news_page.paginator.num_pages > 1 %}
+    <nav class="pager" aria-label="pages">
+      {% for n in news_page.paginator.page_range %}{% if n == news_page.number %}<span class="current">{{ n }}</span>{% else %}<a href="?page={{ n }}">{{ n }}</a>{% endif %}{% endfor %}
+    </nav>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
