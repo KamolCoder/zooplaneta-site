@@ -1,4 +1,3 @@
-import json
 import math
 from datetime import time
 
@@ -29,6 +28,10 @@ class StoreIndexPage(Page):
 
     class Meta:
         verbose_name = "Магазины (карта и список)"
+
+    def seo_auto_title(self) -> str:
+        from core.ui import t
+        return t("seo_stores_title")
 
     def stores(self):
         return StorePage.objects.child_of(self).live().order_by("title")
@@ -113,30 +116,50 @@ class StorePage(Page):
             return siblings[:limit]
         return sorted(siblings, key=self.distance_km)[:limit]
 
-    def jsonld(self) -> str:
+    def hours_text(self) -> str:
+        from core.ui import t
+        return t("open_24") if self.is_24h else f"{t('hours')}: {self.opens:%H:%M}–{self.closes:%H:%M}"
+
+    def seo_auto_title(self) -> str:
+        from core.ui import t
+        return t("seo_store_title").format(name=self.title)
+
+    def seo_auto_description(self) -> str:
         from core.models import SiteSettings
+        from core.ui import t
+        return t("seo_store_desc").format(address=self.address, hours=self.hours_text(),
+                                          phone=self.phone or SiteSettings.load().phone)
+
+    def structured_data(self) -> dict:
+        from core.models import SiteSettings
+        from core.seo import absolute
         site = SiteSettings.load()
         data = {
-            "@context": "https://schema.org",
             "@type": "PetStore",
+            "@id": self.full_url + "#store",
             "name": f"Zoo Planeta — {self.title}",
             "url": self.full_url,
             "telephone": self.phone or site.phone,
             "address": {"@type": "PostalAddress", "streetAddress": self.address,
                         "addressLocality": "Tashkent", "addressCountry": "UZ"},
-            "openingHours": "Mo-Su 00:00-24:00" if self.is_24h
-            else f"Mo-Su {self.opens:%H:%M}-{self.closes:%H:%M}",
+            "openingHoursSpecification": [{
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                "opens": "00:00" if self.is_24h else f"{self.opens:%H:%M}",
+                "closes": "23:59" if self.is_24h else f"{self.closes:%H:%M}",
+            }],
+            "parentOrganization": {"@id": absolute("/#organization")},
         }
+        if self.image:
+            data["image"] = absolute(self.image.get_rendition("fill-1200x800|format-jpeg").url)
         if self.has_coords:
             data["geo"] = {"@type": "GeoCoordinates", "latitude": float(self.latitude),
                            "longitude": float(self.longitude)}
-        raw = json.dumps(data, ensure_ascii=False)
-        return raw.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+        return data
 
     def get_context(self, request, *args, **kwargs):
         ctx = super().get_context(request, *args, **kwargs)
         ctx["nearby"] = self.nearby()
-        ctx["jsonld"] = self.jsonld()
         return ctx
 
     def public_dict(self) -> dict:

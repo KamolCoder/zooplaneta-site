@@ -25,6 +25,12 @@ self-hosted Onest font and Leaflet (no CDNs).
 - CMS: Wagtail default colours (no recolouring), Zoo Planeta logo via `templates/wagtailadmin/*`, light theme forced
   for everyone (`core/signals.py` + migration, theme choice hidden in `static/css/cms.css`), start page panels in
   `core/dashboard.py` (quick actions, new leads, running promos).
+- SEO: `core/seo.py` (meta title/description with per-page `seo_auto_title/description`, hreflang + x-default,
+  OG, JSON-LD @graph: Organization/WebSite, PetStore, JobPosting, BreadcrumbList), `core/sitemap.py` (all locales
+  + xhtml:link), robots in `core/views.py`. Absolute URLs come from `SITE_URL`; `sync_site` (run at container start)
+  writes it into Wagtail's Site. Verification codes + Metrika/GA4 in SiteSettings (counters only when DEBUG=False).
+- Deploy: host nginx on the timkon.uz server, `deploy/nginx/zooplaneta.conf` → `/etc/nginx/conf.d/`, included from
+  nginx.conf; certbot --nginx adds HTTPS; app on 127.0.0.1:8030.
 - `leads/` — JobApplication / PartnerRequest / Feedback, Wagtail ModelViewSets («Заявки», CSV export).
   CVs in `PRIVATE_MEDIA_ROOT`, downloaded only via `/cms/leads/resume/<name>` (needs view perm).
 

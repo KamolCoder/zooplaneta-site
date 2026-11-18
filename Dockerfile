@@ -20,4 +20,4 @@ EXPOSE 8000
 # small footprint: 2 workers × 2 threads (~270 MB RSS) is plenty for an info site;
 # workers restart after 1000 requests so memory never creeps up
 ENV WEB_CONCURRENCY=2 WEB_THREADS=2
-CMD ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers ${WEB_CONCURRENCY} --threads ${WEB_THREADS} --preload --max-requests 1000 --max-requests-jitter 100 --timeout 60"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py sync_site && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers ${WEB_CONCURRENCY} --threads ${WEB_THREADS} --preload --max-requests 1000 --max-requests-jitter 100 --timeout 60"]

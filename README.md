@@ -66,7 +66,7 @@ python manage.py import_stores stores.json
 
 Новые магазины создаются на трёх языках (UZ/EN — копия, переведите названия в CMS); у существующих обновляются адрес, координаты, часы и телефон. Демо-магазины (`store-01…23`) после импорта удалите в CMS.
 
-## Продакшен
+## Продакшен (сервер timkon.uz, nginx на хосте)
 
 Один контейнер, без отдельной базы. Всё, что должно пережить пересборку, лежит на хосте в `/srv/zooplaneta`
 (другой путь — переменная `ZP_DATA_DIR`):
@@ -77,20 +77,69 @@ python manage.py import_stores stores.json
 | `/srv/zooplaneta/media` | `/app/media` | загруженные фото и документы (отдаёт nginx) |
 | `/srv/zooplaneta/private` | `/app/private` | резюме (только через CMS) |
 
+### 1. DNS
+A-записи `zooplaneta.uz` и `www.zooplaneta.uz` → IP сервера. Проверка: `dig +short zooplaneta.uz`.
+
+### 2. Приложение
 ```bash
+cd /srv && git clone https://github.com/KamolCoder/zooplaneta-site.git && cd zooplaneta-site
 sudo mkdir -p /srv/zooplaneta/{data,media,private}
-cp .env.example .env        # заполнить
+cp .env.example .env    # SECRET_KEY, ALLOWED_HOSTS, SITE_URL=https://zooplaneta.uz, ADMIN_URL (неочевидный путь)
 docker compose up -d --build
 docker compose exec web python manage.py createsuperuser
+curl -sI -H "Host: zooplaneta.uz" http://127.0.0.1:8030/health/    # 204
+```
+Контейнер при каждом старте выполняет `migrate` и `sync_site` (адрес сайта для canonical и sitemap берётся из `SITE_URL`).
+
+### 3. nginx
+```bash
+sudo cp deploy/nginx/zooplaneta.conf /etc/nginx/conf.d/zooplaneta.conf
+# в /etc/nginx/nginx.conf внутри http { } добавить одну строку:
+#     include /etc/nginx/conf.d/zooplaneta.conf;
+sudo nginx -t && sudo systemctl reload nginx     # reload не прерывает остальные сайты
 ```
 
-Обновление: `git pull && docker compose up -d --build` — база и файлы остаются (миграции выполняются при старте).
+### 4. HTTPS
+```bash
+sudo certbot --nginx -d zooplaneta.uz -d www.zooplaneta.uz --redirect
+sudo nginx -t && sudo systemctl reload nginx
+```
+certbot сам допишет 443, сертификат и редирект http → https; продление — его же таймер.
+
+### 5. Проверка
+```bash
+curl -sI http://zooplaneta.uz/ | head -3            # 301 → https
+curl -sI https://www.zooplaneta.uz/ru/ | head -3    # 301 → https://zooplaneta.uz/ru/
+curl -sI https://zooplaneta.uz/ru/ | head -1        # 200
+curl -s https://zooplaneta.uz/robots.txt
+curl -s https://zooplaneta.uz/sitemap.xml | head -5 # адреса https://zooplaneta.uz/…
+```
+
+### 6. Поисковики
+1. Яндекс.Вебмастер и Google Search Console: добавить `https://zooplaneta.uz`, способ подтверждения — meta-тег.
+   Код вставить в CMS: «Настройки → Контакты и реквизиты → Поисковики и аналитика».
+2. В обоих отправить `https://zooplaneta.uz/sitemap.xml`.
+3. Там же — номер счётчика Яндекс.Метрики и ID GA4 (счётчики подключаются только при `DEBUG=False`).
+
+Обновление: `git pull && docker compose up -d --build` — база и файлы остаются.
 **Не запускайте** `docker compose down -v` и не удаляйте `/srv/zooplaneta`.
 
 Ресурсы: лимит контейнера 384 МБ и 0.5 CPU, gunicorn 2 процесса × 2 потока (~270 МБ). Для большей нагрузки —
 `WEB_CONCURRENCY` / `WEB_THREADS` в `.env` и `mem_limit` в `docker-compose.yml`.
 
-nginx — `deploy/nginx.conf` (порт 8030, `/media/` из `/srv/zooplaneta/media`).
+## SEO (что делает сайт сам)
+
+- `sitemap.xml` со всеми языками и `hreflang`-альтернативами, `robots.txt` (CMS, API и `?sent=` закрыты).
+- `canonical`, `hreflang` + `x-default` (русская версия), Open Graph на каждой странице.
+- Автоматические `title` / `description`, если редактор не заполнил вкладку «Продвижение»:
+  магазины — «Зоомагазин Zoo Planeta — {название}, Ташкент» + адрес, часы, телефон; акции — скидка и даты;
+  вакансии — зарплата и график.
+- JSON-LD: `Organization` + `WebSite` (главная), `PetStore` (магазины), `JobPosting` (открытые вакансии),
+  `BreadcrumbList` (все внутренние страницы).
+- Завершённые акции — `noindex` и вне sitemap.
+
+Вне сайта, но важнее всего для «зоомагазин рядом»: карточки всех магазинов в Google Business Profile,
+Яндекс Бизнесе и 2ГИС со ссылкой на страницу магазина; название, адрес и телефон — как на сайте.
 
 ### Бэкап
 

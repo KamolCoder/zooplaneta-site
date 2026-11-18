@@ -178,3 +178,73 @@ class BackupTests(TransactionTestCase):
             self.assertEqual(con.execute("select count(*) from leads_feedback").fetchone()[0], 1)
             con.close()
             self.assertEqual(len(list(Path(tmp).glob("files-*.tar.gz"))), 1)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False, SITE_URL="https://zooplaneta.uz", ALLOWED_HOSTS=["zooplaneta.uz", "testserver"])
+class SeoTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_demo", verbosity=0)
+        call_command("sync_site", stdout=open("/dev/null", "w"))
+
+    def head(self, url):
+        import re
+        html = self.client.get(url, HTTP_HOST="zooplaneta.uz", secure=True).content.decode()
+        return html, re.search(r"<head>(.*?)</head>", html, re.S).group(1)
+
+    def test_canonical_uses_site_url(self):
+        _, head = self.head("/ru/stores/store-01/")
+        self.assertIn('<link rel="canonical" href="https://zooplaneta.uz/ru/stores/store-01/">', head)
+        self.assertIn('hreflang="x-default" href="https://zooplaneta.uz/ru/stores/store-01/"', head)
+
+    def test_sitemap_has_every_language_and_alternates(self):
+        xml = self.client.get("/sitemap.xml").content.decode()
+        for lang in ("ru", "uz", "en"):
+            self.assertIn(f"<loc>https://zooplaneta.uz/{lang}/</loc>", xml)
+        self.assertIn('hreflang="x-default"', xml)
+        self.assertNotIn("localhost", xml)
+        self.assertNotIn("/promo-6/", xml)  # ended promo
+
+    def test_robots_points_to_sitemap(self):
+        txt = self.client.get("/robots.txt").content.decode()
+        self.assertIn("Sitemap: https://zooplaneta.uz/sitemap.xml", txt)
+        self.assertIn("Disallow: /cms/", txt)
+
+    def test_auto_titles_descriptions_and_structured_data(self):
+        _, head = self.head("/ru/stores/store-01/")
+        self.assertIn("<title>Зоомагазин Zoo Planeta — Чиланзар, 1-й квартал, Ташкент</title>", head)
+        self.assertIn('<meta name="description" content="Зоомагазин Zoo Planeta:', head)
+        self.assertIn('"@type": "PetStore"', head)
+        self.assertIn('"@type": "BreadcrumbList"', head)
+        _, head = self.head("/ru/careers/vacancy-1/")
+        self.assertIn('"@type": "JobPosting"', head)
+        self.assertIn('"minValue": 4000000', head)
+        _, head = self.head("/ru/")
+        self.assertIn('"@type": "Organization"', head)
+
+    def test_ended_promo_is_noindex(self):
+        _, head = self.head("/ru/promos/promo-6/")
+        self.assertIn('<meta name="robots" content="noindex, follow">', head)
+        _, head = self.head("/ru/promos/promo-1/")
+        self.assertNotIn("noindex", head)
+
+    def test_verification_and_analytics(self):
+        from core.models import SiteSettings
+        s = SiteSettings.load()
+        s.yandex_verification, s.google_verification, s.yandex_metrika_id = "abc123", "g-XyZ_1", "12345678"
+        s.save()
+        html, head = self.head("/ru/")
+        self.assertIn('<meta name="yandex-verification" content="abc123">', head)
+        self.assertIn('<meta name="google-site-verification" content="g-XyZ_1">', head)
+        self.assertTrue('ym(12345678,"init"' in html)  # tests run with DEBUG=False
+        with override_settings(DEBUG=True):
+            html, _ = self.head("/ru/")
+        self.assertFalse("mc.yandex.ru" in html)  # no counters on a dev machine
+
+    def test_bad_metrika_id_rejected(self):
+        from django.core.exceptions import ValidationError
+        from core.models import SiteSettings
+        s = SiteSettings.load()
+        s.yandex_metrika_id = "<script>"
+        with self.assertRaises(ValidationError):
+            s.full_clean()
