@@ -1,0 +1,9 @@
+{% load wagtailadmin_tags %}
+<section class="zp-panel">
+  <h2 class="zp-panel__title">Быстрые действия</h2>
+  <div class="zp-actions">
+    {% for label, icon_name, url in actions %}
+      <a class="zp-action" href="{{ url }}">{% icon name=icon_name classname="zp-action__icon" %}<span>{{ label }}</span></a>
+    {% endfor %}
+  </div>
+</section>

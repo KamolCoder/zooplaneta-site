@@ -135,3 +135,25 @@ class LeadFormTests(TestCase):
             self.assertEqual(self.client.post("/ru/contacts/", data).status_code, 302)
         self.assertEqual(self.client.post("/ru/contacts/", data).status_code, 200)
         self.assertEqual(Feedback.objects.count(), 10)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class CmsTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_demo", verbosity=0)
+
+    def test_light_theme_forced_and_dashboard_panels(self):
+        from django.contrib.auth import get_user_model
+        from wagtail.users.models import UserProfile
+        user = get_user_model().objects.create_superuser("ed", "ed@example.com", "pass12345")
+        profile = UserProfile.get_for_user(user)
+        profile.theme = "dark"
+        profile.save()
+        self.assertEqual(UserProfile.get_for_user(user).theme, "light")
+        Feedback.objects.create(name="Мадина", phone="1", message="hi")
+        self.client.force_login(user)
+        html = self.client.get("/cms/").content.decode()
+        self.assertIn("w-theme-light", html)
+        for text in ("Быстрые действия", "Новые заявки", "Действующие акции", "Мадина", "Zoo Planeta CMS"):
+            self.assertIn(text, html)

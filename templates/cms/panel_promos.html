@@ -1,0 +1,25 @@
+<section class="zp-panel">
+  <div class="zp-panel__head">
+    <h2 class="zp-panel__title">Действующие акции</h2>
+    {% if add_url %}<a class="button button-small button-secondary" href="{{ add_url }}">Добавить акцию</a>{% endif %}
+  </div>
+  {% if rows %}
+  <table class="listing zp-table">
+    <thead><tr><th>Акция</th><th>До</th><th>Осталось</th></tr></thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td><a href="{{ r.url }}"><b>{{ r.page.title }}</b></a></td>
+        <td>{{ r.page.date_to|date:"d.m.Y" }}</td>
+        <td>{% if r.days == 0 %}<span class="zp-tag zp-tag--warn">последний день</span>{% elif r.days <= 3 %}<span class="zp-tag zp-tag--warn">{{ r.days }} дн.</span>{% else %}{{ r.days }} дн.{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="zp-muted">Сейчас нет действующих акций — на сайте показывается «активных акций нет».</p>
+  {% endif %}
+  {% if upcoming %}<p class="zp-muted" style="margin-top:12px">Скоро начнутся: {% for u in upcoming %}<a href="{{ u.url }}">{{ u.page.title }}</a> ({{ u.page.date_from|date:"d.m" }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  {% if drafts %}<p class="zp-muted">Черновиков акций: {{ drafts }}.</p>{% endif %}
+  <p class="zp-muted">Показаны акции на русском. Не забудьте перевести новую акцию на узбекский: меню страницы → «Перевести».</p>
+</section>
