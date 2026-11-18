@@ -4,3 +4,6 @@ from django.apps import AppConfig
 class CoreConfig(AppConfig):
     name = "core"
     verbose_name = "Сайт"
+
+    def ready(self):
+        from core import signals  # noqa: F401

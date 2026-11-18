@@ -20,6 +20,9 @@ self-hosted Onest font and Leaflet (no CDNs).
   `FormPageMixin`: POST → `leads.handling.handle_lead_form` (honeypot, 10/hour per IP, notify) → `?sent=1`.
 - `stores/` — StoreIndexPage (list + map, JSON in page) and StorePage (JSON-LD PetStore, nearby stores);
   `GET /api/stores/<lang>/`.
+- CMS: Wagtail default colours (no recolouring), Zoo Planeta logo via `templates/wagtailadmin/*`, light theme forced
+  for everyone (`core/signals.py` + migration, theme choice hidden in `static/css/cms.css`), start page panels in
+  `core/dashboard.py` (quick actions, new leads, running promos).
 - `leads/` — JobApplication / PartnerRequest / Feedback, Wagtail ModelViewSets («Заявки», CSV export).
   CVs in `PRIVATE_MEDIA_ROOT`, downloaded only via `/cms/leads/resume/<name>` (needs view perm).
 

@@ -1,0 +1,20 @@
+<section class="zp-panel">
+  <h2 class="zp-panel__title">Новые заявки</h2>
+  <div class="zp-counters">
+    {% for g in groups %}
+      <a class="zp-counter{% if g.new %} zp-counter--hot{% endif %}" href="{{ g.url }}"><b>{{ g.new }}</b><span>{{ g.label }}</span></a>
+    {% endfor %}
+  </div>
+  {% if latest %}
+  <table class="listing zp-table">
+    <thead><tr><th>Кто</th><th>Тип</th><th>Получена</th></tr></thead>
+    <tbody>
+      {% for row in latest %}
+      <tr><td><a href="{{ row.url }}"><b>{{ row.obj }}</b></a></td><td>{{ row.kind }}</td><td>{{ row.obj.created_at|date:"d.m.Y H:i" }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="zp-muted">Новых заявок нет.</p>
+  {% endif %}
+</section>

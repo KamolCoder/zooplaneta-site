@@ -1,0 +1,26 @@
+/* Zoo Planeta CMS: start-page panels and branding. Colours stay Wagtail's own (readable in every theme). */
+.zp-panel { margin-bottom: 2.5rem; }
+.zp-panel__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+.zp-panel__title { font-size: 1.25rem; font-weight: 700; margin: 0 0 .75rem; }
+.zp-panel__head .zp-panel__title { margin: 0; }
+.zp-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .75rem; }
+.zp-action { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.1rem; border: 1px solid var(--w-color-border-furniture);
+  border-radius: .5rem; font-weight: 600; color: var(--w-color-text-label); text-decoration: none; background: var(--w-color-surface-page); }
+.zp-action:hover { border-color: var(--w-color-secondary); color: var(--w-color-secondary); }
+.zp-action__icon { width: 1.25rem; height: 1.25rem; color: var(--w-color-secondary); flex: none; }
+.zp-counters { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+.zp-counter { display: block; padding: 1rem 1.1rem; border-radius: .5rem; border: 1px solid var(--w-color-border-furniture);
+  text-decoration: none; color: var(--w-color-text-label); }
+.zp-counter b { display: block; font-size: 1.75rem; line-height: 1.1; }
+.zp-counter span { font-size: .875rem; color: var(--w-color-text-meta); }
+.zp-counter--hot { border-color: #FDCC27; background: #FFF7D6; color: #111; }
+.zp-counter--hot span { color: #5a4a00; }
+.zp-counter:hover { border-color: var(--w-color-secondary); }
+.zp-table { margin-top: .5rem; }
+.zp-muted { color: var(--w-color-text-meta); font-size: .9rem; }
+.zp-tag { display: inline-block; padding: .1rem .5rem; border-radius: 1rem; font-size: .8rem; font-weight: 700; }
+.zp-tag--warn { background: #FFF7D6; color: #6b5300; border: 1px solid #FDCC27; }
+.zp-logo { display: block; width: 100%; max-width: 104px; height: auto; margin: 0 auto; border-radius: 50%; }
+.login-logo .zp-logo { width: 96px; margin: 0 auto; }
+/* the theme is fixed to light for everyone (core/signals.py) — hide the choice in account settings */
+.w-field__wrapper:has([name="theme-theme"]) { display: none; }
