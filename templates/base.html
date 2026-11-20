@@ -6,7 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {% block seo %}{% seo_head %}{% endblock %}
 <meta name="theme-color" content="#FDCC27">
-<link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="96x96" href="{% static 'icons/favicon-96.png' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/favicon-192.png' %}">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="{% static 'fonts/onest-cyrillic-700-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
 <link rel="stylesheet" href="{% static 'css/site.css' %}">

@@ -248,3 +248,18 @@ class SeoTests(TestCase):
         s.yandex_metrika_id = "<script>"
         with self.assertRaises(ValidationError):
             s.full_clean()
+
+
+class IconTests(TestCase):
+    def test_root_icons_and_manifest(self):
+        resp = self.client.get("/favicon.ico")
+        self.assertEqual((resp.status_code, resp["Content-Type"]), (200, "image/x-icon"))
+        self.assertEqual(self.client.get("/apple-touch-icon.png").status_code, 200)
+        data = self.client.get("/site.webmanifest").json()
+        self.assertEqual([i["sizes"] for i in data["icons"]], ["48x48", "96x96", "192x192"])
+
+    def test_icons_in_head(self):
+        call_command("seed_demo", verbosity=0)
+        html = self.client.get("/ru/").content.decode()
+        self.assertIn('<link rel="icon" href="/favicon.ico"', html)
+        self.assertIn('rel="apple-touch-icon"', html)

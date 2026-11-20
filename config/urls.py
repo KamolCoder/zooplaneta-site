@@ -8,7 +8,7 @@ from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
 from core.sitemap import sitemap
-from core.views import health, robots_txt
+from core.views import apple_touch_icon, favicon, health, robots_txt, webmanifest
 from stores.views import stores_json
 
 urlpatterns = [
@@ -16,6 +16,9 @@ urlpatterns = [
     path("documents/", include(wagtaildocs_urls)),
     path("sitemap.xml", sitemap),
     path("robots.txt", robots_txt),
+    path("favicon.ico", favicon),
+    path("apple-touch-icon.png", apple_touch_icon),
+    path("site.webmanifest", webmanifest),
     path("health/", health),
     path("api/stores/<str:lang>/", stores_json, name="stores-json"),
 ]
