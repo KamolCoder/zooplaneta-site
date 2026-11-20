@@ -29,6 +29,8 @@ self-hosted Onest font and Leaflet (no CDNs).
   OG, JSON-LD @graph: Organization/WebSite, PetStore, JobPosting, BreadcrumbList), `core/sitemap.py` (all locales
   + xhtml:link), robots in `core/views.py`. Absolute URLs come from `SITE_URL`; `sync_site` (run at container start)
   writes it into Wagtail's Site. Verification codes + Metrika/GA4 in SiteSettings (counters only when DEBUG=False).
+- Icons: `static/icons/*` built by `manage.py make_icons` from `static/img/logo.png` (rerun when an SVG/bigger logo
+  arrives); `/favicon.ico`, `/apple-touch-icon.png`, `/site.webmanifest` served from the site root (`core/views.py`).
 - Deploy: host nginx on the timkon.uz server, `deploy/nginx/zooplaneta.conf` → `/etc/nginx/conf.d/`, included from
   nginx.conf; certbot --nginx adds HTTPS; app on 127.0.0.1:8030.
 - `leads/` — JobApplication / PartnerRequest / Feedback, Wagtail ModelViewSets («Заявки», CSV export).
