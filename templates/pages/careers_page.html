@@ -22,7 +22,7 @@
 {% if page.body %}<section class="section section-alt"><div class="container">{% include "includes/body.html" with body=page.body %}</div></section>{% endif %}
 <section class="section" id="form">
   <div class="container form-wrap">
-    <div><h2>{% t "send_cv" %}</h2><p class="intro">{% t "no_vacancies" %}</p>
+    <div><h2>{% t "send_cv" %}</h2><p class="intro">{% if vacancies %}{% t "cv_any" %}{% else %}{% t "no_vacancies" %}{% endif %}</p>
       {% if settings.core.SiteSettings.hr_phone %}<p style="margin-top:20px"><a class="link-arrow" href="tel:{{ settings.core.SiteSettings.hr_phone_href }}"><svg class="icon"><use href="#i-phone"/></svg>{{ settings.core.SiteSettings.hr_phone }}</a></p>{% endif %}
     </div>
     <div>{% t "send_cv" as submit_label %}{% include "includes/lead_form.html" with submit_label=submit_label %}</div>

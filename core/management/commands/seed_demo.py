@@ -1,11 +1,16 @@
-"""Fill an empty site with demo content in RU / UZ / EN so it can be reviewed.
+"""Fill the site with demo content in RU / UZ / EN so every section can be reviewed.
 
-    python manage.py seed_demo           # only on an empty site
-    python manage.py seed_demo --reset   # delete all pages first (!)
+    python manage.py seed_demo             # empty site: build everything
+    python manage.py seed_demo --missing   # live site: only add sections that do not exist yet, keep the rest
+    python manage.py seed_demo --reset     # delete all pages first (!) and build everything
+    python manage.py seed_demo --photos    # any of the above + sample photos (seed_photos)
 
-Everything here is placeholder text: replace addresses, phones, promos and
-vacancies with real ones in the CMS. Promos, news and vacancies are created in
-RU and UZ only — the English version is for foreign partners.
+Covers every page type, block and setting: home sections, about (leadership, gallery, stores map),
+23 stores (manager, photos), catalogue + brands, promos, news, Give a Paw, delivery (app + aggregators),
+UDS bonuses, careers (vacancies, staff stories), partners, contacts, privacy; empty settings get demo
+values (app links, UDS link/code, short number 0000). Everything is placeholder text marked «демо» /
+«Имя Фамилия»: replace it in the CMS. Promos, news, vacancies, Give a Paw, delivery and UDS are RU + UZ only —
+the English version is for foreign partners.
 """
 import datetime as dt
 from decimal import Decimal
@@ -81,6 +86,42 @@ BRANDS = ["Royal Canin", "Purina Pro Plan", "Hill's", "Brit", "Acana", "Monge", 
           "Pedigree", "Tetra", "Vitakraft", "Trixie"]
 
 
+# role, quote (ru/uz/en) — names and photos are placeholders until the real team is photographed
+LEADERS = [
+    (("Генеральный директор", "Bosh direktor", "Chief Executive Officer"),
+     ("Отвечаю за развитие сети и за то, чтобы каждый магазин работал по одним стандартам.",
+      "Tarmoq rivoji va har bir doʻkon yagona standartlar asosida ishlashi uchun javob beraman.",
+      "I lead the chain's growth and make sure every store works to one standard.")),
+    (("Коммерческий директор", "Tijorat direktori", "Commercial Director"),
+     ("Подбираю ассортимент и договариваюсь с производителями о лучших условиях.",
+      "Assortimentni tanlayman va ishlab chiqaruvchilar bilan eng yaxshi shartlarni kelishaman.",
+      "I build the product range and negotiate the best terms with manufacturers.")),
+    (("Директор по рознице", "Chakana savdo direktori", "Retail Director"),
+     ("Слежу, чтобы в магазинах было чисто, удобно и всегда был нужный товар.",
+      "Doʻkonlarda tozalik, qulaylik va kerakli mahsulot doim boʻlishini kuzataman.",
+      "I make sure our stores are clean, convenient and always stocked.")),
+    (("Руководитель отдела персонала", "Xodimlar boʻlimi rahbari", "Head of HR"),
+     ("Нахожу и обучаю людей, которые любят животных и умеют помочь покупателю.",
+      "Hayvonlarni sevadigan va xaridorga yordam bera oladigan insonlarni topaman va oʻqitaman.",
+      "I hire and train people who love animals and know how to help customers.")),
+    (("Руководитель маркетинга", "Marketing rahbari", "Head of Marketing"),
+     ("Отвечаю за акции, программу UDS и проект Give a Paw.",
+      "Aksiyalar, UDS dasturi va Give a Paw loyihasi uchun javob beraman.",
+      "I run our offers, the UDS rewards programme and Give a Paw.")),
+]
+
+STAFF_STORIES = [
+    (("Пришла продавцом-консультантом, через полтора года стала управляющей магазина в Юнусабаде.",
+      "Sotuvchi-maslahatchi boʻlib kelganman, bir yarim yildan soʻng Yunusobod doʻkoni boshqaruvchisi boʻldim."),
+     ("Управляющая магазином", "Doʻkon boshqaruvchisi")),
+    (("Здесь научили разбираться в кормах лучше, чем я мог представить. Покупатели приходят за советом именно ко мне.",
+      "Bu yerda yemlarni men oʻylagandan ham yaxshiroq tushunishni oʻrgatishdi. Xaridorlar maslahat uchun aynan menga kelishadi."),
+     ("Продавец-консультант", "Sotuvchi-maslahatchi")),
+    (("Удобный график 2/2 и магазин в десяти минутах от дома — могу совмещать работу и учёбу.",
+      "Qulay 2/2 grafik va uydan oʻn daqiqalik doʻkon — ish va oʻqishni birga olib boraman."),
+     ("Кассир", "Kassir")),
+]
+
 # slug, icon, title, summary, subcategories (ru/uz/en), brands
 CATEGORIES = [
     ("dogs", "dog", ("Для собак", "Itlar uchun", "Dogs"),
@@ -140,16 +181,32 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--reset", action="store_true", help="Delete all existing pages first")
+        parser.add_argument("--missing", action="store_true",
+                            help="Keep existing pages; only create sections that are missing and fill empty settings")
+        parser.add_argument("--photos", action="store_true", help="Also run seed_photos (downloads sample photos)")
 
-    @transaction.atomic
-    def handle(self, *args, reset=False, **opts):
-        if HomePage.objects.exists():
-            if not reset:
-                raise CommandError("The site already has content. Use --reset to wipe it (all pages are deleted).")
-            for home in HomePage.objects.all():
-                home.delete()
-
+    def handle(self, *args, reset=False, missing=False, photos=False, **opts):
         self.loc = {code: Locale.objects.get_or_create(language_code=code)[0] for code in L}
+        if HomePage.objects.exists() and missing:
+            with transaction.atomic():
+                self.add_missing()
+                self.fill_settings()
+        else:
+            if HomePage.objects.exists():
+                if not reset:
+                    raise CommandError("The site already has content. Use --missing to add only what is missing, "
+                                       "or --reset to wipe it (all pages are deleted).")
+                for home in HomePage.objects.all():
+                    home.delete()
+            with transaction.atomic():
+                self.build_all()
+                self.fill_settings()
+            self.stdout.write(self.style.SUCCESS("Demo content created. Open /ru/ — and /cms/ to edit it."))
+        if photos:
+            from django.core.management import call_command
+            call_command("seed_photos", stdout=self.stdout)
+
+    def build_all(self):
         root = Page.get_first_root_node()
         site = Site.objects.filter(is_default_site=True).first()
         hostname, port = (site.hostname, site.port) if site else ("localhost", 80)
@@ -178,7 +235,57 @@ class Command(BaseCommand):
         settings.privacy_page = privacy
         settings.save()
         self.fill_home(home, about, stores, promos, careers, partners, delivery)
-        self.stdout.write(self.style.SUCCESS("Demo content created. Open /ru/ — and /cms/ to edit it."))
+
+    def add_missing(self):
+        """Create the sections a live site does not have yet (new features), in RU (+UZ/EN where they exist)."""
+        home = HomePage.objects.filter(locale=self.loc["ru"]).first()
+        if home is None:
+            raise CommandError("No Russian home page found.")
+        under = Page.objects.descendant_of(home)
+        sections = [
+            (StandardPage, "about", self.build_about),
+            (StoreIndexPage, None, self.build_stores),
+            (CategoryIndexPage, None, self.build_catalog),
+            (PromoIndexPage, None, self.build_promos),
+            (NewsIndexPage, None, self.build_news),
+            (CharityIndexPage, None, self.build_charity),
+            (DeliveryPage, None, self.build_delivery),
+            (LoyaltyPage, None, self.build_loyalty),
+            (CareersPage, None, self.build_careers),
+            (PartnersPage, None, self.build_partners),
+            (ContactPage, None, self.build_contacts),
+            (StandardPage, "privacy", self.build_privacy),
+        ]
+        created = []
+        for model, slug, build in sections:
+            qs = under.type(model)
+            if slug:
+                qs = qs.filter(slug=slug)
+            if qs.exists():
+                continue
+            page = build(home)
+            created.append(page.title)
+            if slug == "privacy" and not SiteSettings.load().privacy_page_id:
+                settings = SiteSettings.load()
+                settings.privacy_page = page
+                settings.save()
+        self.stdout.write(self.style.SUCCESS("Created: " + ", ".join(created)) if created
+                          else "Nothing missing — every section exists.")
+
+    def fill_settings(self):
+        """Demo values for empty settings so every block of the site is visible. Replace them in the CMS."""
+        settings = SiteSettings.load()
+        demo = {
+            "short_phone": "0000",
+            "app_store_url": "https://apps.apple.com/",
+            "google_play_url": "https://play.google.com/store/apps",
+            "uds_url": "https://uds.app/",
+            "uds_code": "ZOOPLANETA",
+        }
+        for field, value in demo.items():
+            if not getattr(settings, field):
+                setattr(settings, field, value)
+        settings.save()
 
     # ── helpers ──────────────────────────────────────────────────────────────
     def publish(self, page):
@@ -265,6 +372,12 @@ class Command(BaseCommand):
                               "Har bir xaridor toʻgʻri maslahat olishi uchun xodimlarni oʻqitamiz.",
                               "We train our staff so every customer gets the right advice.")[i], "image": None, "page": None},
                 ]}},
+            {"type": "team", "value": {
+                "title": ("Руководство", "Rahbariyat", "Leadership")[i],
+                "text": ("Демо: замените имена и фото в CMS.", "Demo: ismlar va suratlarni CMS’da almashtiring.",
+                         "Demo: replace names and photos in the CMS.")[i],
+                "people": [{"photo": None, "name": ("Имя Фамилия", "Ism Familiya", "Name Surname")[i],
+                            "role": role[i], "quote": quote[i]} for role, quote in LEADERS]}},
             {"type": "stores_map", "value": {
                 "title": ("География сети", "Tarmoq geografiyasi", "Where we are")[i],
                 "text": ("Магазины Zoo Planeta работают во всех крупных районах Ташкента.",
@@ -291,12 +404,14 @@ class Command(BaseCommand):
                 address=f"{d[0]} р-н, {names[0]} (демо-адрес)", landmark="", metro=metro[0] if metro else "",
                 phone=f"+998 71 200-10-{k:02d}", latitude=Decimal(str(lat)), longitude=Decimal(str(lng)),
                 opens=dt.time(0, 0) if h24 else dt.time(9, 0), closes=dt.time(0, 0) if h24 else dt.time(22, 0),
-                features=FEATURES[0] if k % 3 == 0 else "")
+                features=FEATURES[0] if k % 3 == 0 else "", manager_name="Имя Фамилия")
             self.add(index, store)
             self.translate(store, "uz", title=names[1], district=d[1], address=f"{d[1]} tumani, {names[1]} (demo manzil)",
-                           metro=metro[1] if metro else "", features=FEATURES[1] if k % 3 == 0 else "")
+                           metro=metro[1] if metro else "", features=FEATURES[1] if k % 3 == 0 else "",
+                           manager_name="Ism Familiya")
             self.translate(store, "en", title=names[2], district=d[2], address=f"{names[2]}, {d[2]} district (demo address)",
-                           metro=metro[2] if metro else "", features=FEATURES[2] if k % 3 == 0 else "")
+                           metro=metro[2] if metro else "", features=FEATURES[2] if k % 3 == 0 else "",
+                           manager_name="Name Surname")
         return index
 
     def build_promos(self, home):
@@ -352,7 +467,11 @@ class Command(BaseCommand):
                          ("От продавца до управляющего магазином.", "Sotuvchidan doʻkon boshqaruvchisigacha.",
                           "From sales assistant to store manager.")),
                     ]]}},
-        ]
+        ] + ([{"type": "stories", "value": {
+                "title": ("Люди Zoo Planeta", "Zoo Planeta jamoasi")[i],
+                "text": ("Демо: замените истории на реальные.", "Demo: hikoyalarni haqiqiylariga almashtiring.")[i],
+                "items": [{"photo": None, "name": ("Имя Фамилия", "Ism Familiya")[i], "role": role[i], "story": story[i]}
+                          for story, role in STAFF_STORIES]}}] if i < 2 else [])
         careers = self.tri(home, CareersPage, langs=("ru", "uz"), slug="careers", show_in_menus=(False, False),
                            title=("Карьера", "Karyera"),
                            intro=("Работа в сети зоомагазинов для тех, кто любит животных.",

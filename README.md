@@ -24,7 +24,7 @@ Django 5.2 + Wagtail 7.4 (CMS), SQLite, собственный CSS без сбо
 pip install -r requirements.txt
 DEBUG=True python manage.py migrate
 DEBUG=True python manage.py createsuperuser
-DEBUG=True python manage.py seed_demo
+DEBUG=True python manage.py seed_demo --photos
 DEBUG=True python manage.py runserver
 ```
 
@@ -61,6 +61,20 @@ DEBUG=True python manage.py runserver
 - Страница **«Бонусы UDS»**: крупная цифра кешбэка, промокод с кнопкой «Скопировать», QR, шаги, правила.
 - На главной — блок «Доставка и бонусы»; в шапке кнопка «Доставка»; на телефоне снизу панель
   «Позвонить · Доставка · Магазины».
+
+### Демо-наполнение
+
+```bash
+python manage.py seed_demo             # пустой сайт: создать всё
+python manage.py seed_demo --missing   # рабочий сайт: досоздать только разделы, которых нет (ничего не удаляет)
+python manage.py seed_demo --reset     # удалить ВСЕ страницы и создать заново
+python manage.py seed_demo --photos    # + примерные фото (seed_photos)
+```
+
+Демо покрывает всё: главную, «О компании» (руководство, галерея, карта), 23 магазина (управляющий, фото),
+каталог и бренды, акции, новости, Give a Paw, доставку, UDS, карьеру (вакансии, истории сотрудников), партнёров,
+контакты, политику. Пустые настройки получают демо-значения (ссылки на приложение и UDS, промокод, короткий
+номер 0000). Демо-тексты помечены «демо», люди — «Имя Фамилия»: всё заменяется в CMS.
 
 ### Примерные фото
 

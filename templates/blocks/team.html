@@ -5,6 +5,7 @@
   <div class="person">
     <div class="person-photo">{% if p.photo %}{% image p.photo fill-480x560 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
     <b>{{ p.name }}</b>{% if p.role %}<span>{{ p.role }}</span>{% endif %}
+    {% if p.quote %}<p class="person-quote">{{ p.quote }}</p>{% endif %}
   </div>
   {% endfor %}
 </div>
