@@ -265,7 +265,7 @@ class IconTests(TestCase):
         self.assertIn('rel="apple-touch-icon"', html)
 
 
-@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(SECURE_SSL_REDIRECT=False, MEDIA_ROOT=__import__("tempfile").mkdtemp(prefix="zp-media-"))
 class SectionTests(TestCase):
     """Catalogue, Give a Paw, home sections, news rubrics, store gallery/city, CMS roles."""
 
@@ -335,3 +335,37 @@ class SectionTests(TestCase):
         self.assertEqual(pages, {"careers"})
         self.assertTrue(hr.permissions.filter(codename="view_jobapplication").exists())
         self.assertEqual(GroupPagePermission.objects.filter(group=hr, permission__codename="publish_page").count(), 2)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False, MEDIA_ROOT=__import__("tempfile").mkdtemp(prefix="zp-media-"))
+class SamplePhotoTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_demo", verbosity=0)
+
+    def test_seed_and_remove_sample_photos(self):
+        from io import BytesIO
+        from unittest import mock
+        from PIL import Image as PILImage
+        from catalog.models import CategoryPage
+
+        def fake_download(photo_id):
+            buf = BytesIO()
+            PILImage.new("RGB", (64, 48), "orange").save(buf, "JPEG")
+            return buf.getvalue()
+
+        with mock.patch("core.management.commands.seed_photos.download", side_effect=fake_download):
+            call_command("seed_photos", stdout=open("/dev/null", "w"))
+        self.assertTrue(all(c.image_id for c in CategoryPage.objects.all()))
+        store = StorePage.objects.get(locale__language_code="ru", slug="store-01")
+        self.assertTrue(store.image_id)
+        self.assertEqual(store.photos.count(), 2)
+        home = HomePage.objects.get(locale__language_code="ru")
+        self.assertTrue(all(b.value["image"] for b in home.slides))
+        self.assertEqual(self.client.get("/ru/").status_code, 200)
+        self.assertEqual(self.client.get("/ru/about/").status_code, 200)
+
+        call_command("seed_photos", "--remove", stdout=open("/dev/null", "w"))
+        self.assertFalse(CategoryPage.objects.filter(image__isnull=False).exists())
+        self.assertEqual(self.client.get("/ru/").status_code, 200)
+        self.assertEqual(self.client.get("/ru/about/").status_code, 200)

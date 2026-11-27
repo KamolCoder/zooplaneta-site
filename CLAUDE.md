@@ -17,7 +17,8 @@ self-hosted Onest font and Leaflet (no CDNs).
 - `config/` settings/urls. Languages ru/uz/en via `i18n_patterns` (`/ru/…`), `WAGTAIL_I18N_ENABLED`,
   translations with `wagtail.contrib.simple_translation`. CMS at `ADMIN_URL` (default `cms/`).
 - `core/` — `SiteSettings` (contacts, one set for all languages), StreamField blocks (`blocks.py`),
-  UI strings `ui.py` (`{% t "key" %}`; no gettext), template tags `site_tags.py`, `seed_demo`, `import_stores`.
+  UI strings `ui.py` (`{% t "key" %}`; no gettext), template tags `site_tags.py`, `seed_demo`, `import_stores`,
+  `seed_photos` (sample Unsplash photos in the «Демо-фото (Unsplash)» collection; `--remove` deletes them).
 - `pages/` — Home (fixed section order: hero → intro+stats → categories → promos → about+advantages → stores map →
   news → Give a Paw → brands → extra blocks), Standard, Contact, Promo index/page, News index/page (rubric `kind`,
   `?kind=` filter, NewsArticle JSON-LD), Careers/Vacancy, Partners, CharityIndex/CharityPage (Give a Paw: project /

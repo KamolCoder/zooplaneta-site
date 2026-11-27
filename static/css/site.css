@@ -589,18 +589,18 @@ a.contact-card:hover { border-color: var(--black); }
 .badge-green { background: var(--green); color: #fff; font-size: 14px; }
 
 /* gallery, team, store photos, news filters */
-.gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .gallery figure { border-radius: var(--radius); overflow: hidden; aspect-ratio: 4/3; }
 .gallery figure:first-child { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }
 .gallery img { width: 100%; height: 100%; object-fit: cover; }
-@media (max-width: 640px) { .gallery { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .gallery { grid-template-columns: 1fr 1fr; } .gallery figure:first-child { grid-row: auto; aspect-ratio: 4/3; } }
 .team { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 .person-photo { border-radius: var(--radius); overflow: hidden; aspect-ratio: 6/7; margin-bottom: 14px; }
 .person-photo img { width: 100%; height: 100%; object-fit: cover; }
 .person b { display: block; font-size: 17px; }
 .person span { display: block; color: var(--muted); font-size: 14.5px; margin-top: 2px; }
 @media (max-width: 860px) { .team { grid-template-columns: repeat(2, 1fr); } }
-.store-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-top: 12px; }
+.store-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 12px; }
 .store-photos figure { border-radius: 12px; overflow: hidden; aspect-ratio: 4/3; position: relative; }
 .store-photos img { width: 100%; height: 100%; object-fit: cover; }
 .store-photos figcaption { position: absolute; left: 8px; bottom: 8px; background: rgba(17,17,17,.75); color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 6px; }
@@ -631,3 +631,4 @@ a.contact-card:hover { border-color: var(--black); }
   .logos > * { height: 64px; font-size: 14px; padding: 8px; }
 }
 .page-head .media .ph { background: #ECEAE3; }
+.store-photos figure, .gallery figure { margin: 0; }
