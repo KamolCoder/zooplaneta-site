@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="{% static 'css/site.css' %}">
 {% block extra_head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}"{% if settings.core.SiteSettings.easter_paws %} data-paws{% endif %}>
 {% include "includes/icons.html" %}
 <a class="skip" href="#main">{% t "skip" %}</a>
 {% language_links as langs %}
@@ -143,6 +143,7 @@
 {% wagtailuserbar "bottom-left" %}
 {% analytics %}
 <script src="{% static 'js/site.js' %}" defer></script>
+{% with season=settings.core.SiteSettings.season_active %}{% if season %}<script src="{% static 'js/season.js' %}" data-effect="{{ season }}" defer></script>{% endif %}{% endwith %}
 {% block extra_js %}{% endblock %}
 </body>
 </html>

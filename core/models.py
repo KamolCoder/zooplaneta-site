@@ -45,6 +45,17 @@ class SiteSettings(BaseGenericSetting):
     office_lat = models.DecimalField("Офис: широта", max_digits=9, decimal_places=6, null=True, blank=True)
     office_lng = models.DecimalField("Офис: долгота", max_digits=9, decimal_places=6, null=True, blank=True)
 
+    easter_paws = models.BooleanField("Пасхалка «следы лап»", default=True,
+                                      help_text="5 кликов по логотипу на главной (или код Konami) — по экрану пробегают следы")
+    fun_404 = models.BooleanField("Интерактивная страница 404", default=True,
+                                  help_text="Кот, которого можно погладить; выключено — обычная страница «не найдено»")
+    SEASON_CHOICES = [("", "Нет"), ("snow", "Снег")]
+    season_effect = models.CharField("Сезонное оформление", max_length=16, choices=SEASON_CHOICES, blank=True,
+                                     help_text="Показывается вверху каждой страницы в заданные даты")
+    season_from = models.DateField("Показывать с", null=True, blank=True, help_text="Пусто — сразу")
+    season_to = models.DateField("Показывать по", null=True, blank=True,
+                                 help_text="Включительно; пусто — пока не выключат вручную")
+
     panels = [
         MultiFieldPanel([FieldPanel("phone"), FieldPanel("phone_hours"), FieldPanel("short_phone"), FieldPanel("email"),
                          FieldPanel("partners_email"), FieldPanel("hr_phone")], "Контакты"),
@@ -57,6 +68,8 @@ class SiteSettings(BaseGenericSetting):
         MultiFieldPanel([FieldPanel("legal_name"), FieldPanel("tax_id"), FieldPanel("address_ru"),
                          FieldPanel("address_uz"), FieldPanel("address_en"), FieldPanel("office_lat"),
                          FieldPanel("office_lng"), FieldPanel("privacy_page")], "Компания"),
+        MultiFieldPanel([FieldPanel("easter_paws"), FieldPanel("fun_404"), FieldPanel("season_effect"),
+                         FieldPanel("season_from"), FieldPanel("season_to")], "Интерактив и сезонное оформление"),
     ]
 
     class Meta:
@@ -85,8 +98,21 @@ class SiteSettings(BaseGenericSetting):
         for f in ("yandex_verification", "google_verification"):
             if getattr(self, f) and not re.fullmatch(r"[\w\-]+", getattr(self, f)):
                 errors[f] = "Вставьте только код из content, без тега"
+        if self.season_from and self.season_to and self.season_from > self.season_to:
+            errors["season_to"] = "Дата окончания раньше даты начала"
         if errors:
             raise ValidationError(errors)
+
+    @property
+    def season_active(self) -> str:
+        """The seasonal effect to show today ("" when none): the dates are inclusive, blank means open-ended."""
+        if not self.season_effect:
+            return ""
+        from django.utils import timezone
+        today = timezone.localdate()
+        if (self.season_from and today < self.season_from) or (self.season_to and today > self.season_to):
+            return ""
+        return self.season_effect
 
     @property
     def address(self) -> str:

@@ -836,3 +836,62 @@ a.aggregator:hover { border-color: var(--black); box-shadow: var(--shadow); }
 }
 @media (max-width: 560px) { .service-cards .service-media { width: calc(100% + 2 * var(--edge)); margin: 8px calc(-1 * var(--edge)) -28px; } }
 .deals { padding-bottom: 40px; }
+
+/* ── 404: the cat that knocked the page off the table ─────────────────────── */
+.nf { padding: 56px 0 96px; }
+.nf-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+.nf-code { display: block; font-size: clamp(88px, 11vw, 140px); line-height: 1; letter-spacing: -.05em; }
+.nf h1 { font-size: clamp(30px, 4vw, 48px); margin-top: 16px; max-width: 600px; }
+.nf-text p { color: var(--muted); font-size: 18px; margin: 16px 0 28px; max-width: 540px; }
+.nf-scene { position: relative; background: var(--bg-2); border-radius: var(--radius-lg); padding: 28px 24px 0;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none; overflow: hidden; }
+.nf-cat { width: 100%; height: auto; overflow: visible; }
+.nf-cat path, .nf-cat ellipse, .nf-cat circle, .nf-cat rect { stroke: var(--black); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+.nf-cat .thin { stroke-width: 3; }
+.nf-cat .hit { stroke: none; }
+.nf-cat .leg { stroke-width: 6; fill: none; }
+.nf-cat .tail-out { fill: none; stroke-width: 17; }
+.nf-cat .tail-in { fill: none; stroke: #fff; stroke-width: 9; }
+.nf-cat .cat-eyes-closed { display: none; }
+.nf-cat .cat-pupil { transition: transform .15s ease-out; }
+.nf-cat .cat-tail { transform-box: view-box; transform-origin: 236px 266px; animation: nf-tail 2.8s ease-in-out infinite alternate; }
+.nf-cat .cat-head { transform-box: view-box; transform-origin: 196px 182px; transition: transform .3s ease; }
+.nf-cat .cat-swipe { transition: transform .22s cubic-bezier(.3, .7, .4, 1); }
+.nf-cat .cup { cursor: pointer; transform-box: fill-box; transform-origin: 50% 100%; }
+.nf-scene.is-petted .cat-eyes-open { display: none; }
+.nf-scene.is-petted .cat-eyes-closed { display: inline; }
+.nf-scene.is-petted .cat-head { transform: rotate(-5deg); }
+.nf-scene.is-petted .cat-tail { animation-duration: .9s; }
+.nf-scene.is-swiping .cat-swipe { transform: translateX(64px); }
+.nf-cat .cup.is-falling { animation: nf-cup-fall .9s cubic-bezier(.5, 0, .9, .5) forwards; }
+.nf-cat .cup.is-back { animation: nf-cup-back .5s ease-out; }
+.nf-purr { position: absolute; font-weight: 700; font-size: 18px; pointer-events: none; animation: nf-purr 1.3s ease-out forwards; }
+.nf-hint { margin-top: 14px; font-size: 14px; color: var(--muted); text-align: center; }
+@keyframes nf-tail { from { transform: rotate(-7deg); } to { transform: rotate(9deg); } }
+@keyframes nf-cup-fall {
+  0% { transform: none; }
+  25% { transform: translate(10px, -6px) rotate(18deg); }
+  100% { transform: translate(84px, 150px) rotate(170deg); opacity: 0; }
+}
+@keyframes nf-cup-back { from { transform: translateY(-40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes nf-purr { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-46px); opacity: 0; } }
+@media (max-width: 900px) {
+  .nf { padding: 32px 0 72px; }
+  .nf-grid { grid-template-columns: 1fr; gap: 32px; }
+  .nf-art { max-width: 520px; }
+}
+
+/* ── easter egg: paw prints run across the screen ─────────────────────────── */
+.paw-trail { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
+.paw-step { position: absolute; color: var(--black); opacity: 0; animation: paw-step 1.5s ease forwards; }
+.paw-step svg { width: 100%; height: 100%; }
+.paw-step .icon-fill { fill: currentColor; }
+@keyframes paw-step {
+  0% { opacity: 0; scale: .6; }
+  12% { opacity: .9; scale: 1; }
+  65% { opacity: .9; }
+  100% { opacity: 0; }
+}
+
+/* ── seasonal effect (season.js): snow over the top of every page ─────────── */
+.season-canvas { position: absolute; top: 0; left: 0; width: 100%; z-index: 55; pointer-events: none; }

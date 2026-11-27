@@ -499,3 +499,56 @@ class HomeHeroRenderTests(TestCase):
         self.assertIn('class="deal"', html)
         self.assertIn("148 000 сум", html)
         self.assertIn('class="slider-next"', html)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class InteractiveTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_demo", verbosity=0)
+
+    def _settings(self, **fields):
+        from core.models import SiteSettings
+        s = SiteSettings.load()
+        for k, v in fields.items():
+            setattr(s, k, v)
+        s.save()
+        return s
+
+    def test_404_cat_in_every_language(self):
+        for lang, title in (("ru", "Кот уронил эту страницу"), ("uz", "Mushuk bu sahifani"), ("en", "The cat knocked")):
+            r = self.client.get(f"/{lang}/no-such-page/")
+            self.assertEqual(r.status_code, 404)
+            html = r.content.decode()
+            self.assertIn(title, html)
+            self.assertIn("data-nf-scene", html)
+            self.assertIn('name="robots" content="noindex"', html)
+
+    def test_404_plain_when_switched_off(self):
+        self._settings(fun_404=False)
+        html = self.client.get("/ru/no-such-page/").content.decode()
+        self.assertNotIn("data-nf-scene", html)
+        self.assertIn("Страница не найдена", html)
+
+    def test_paws_flag(self):
+        self.assertIn("data-paws", self.client.get("/ru/").content.decode())
+        self._settings(easter_paws=False)
+        self.assertNotIn("data-paws", self.client.get("/ru/").content.decode())
+
+    def test_season_dates(self):
+        import datetime
+        from django.core.exceptions import ValidationError
+        from django.utils import timezone
+        today = timezone.localdate()
+        day = datetime.timedelta(days=1)
+        self.assertNotIn("season.js", self.client.get("/ru/").content.decode())   # off by default
+        cases = [((None, None), True), ((today, today), True), ((today - day, None), True),
+                 ((today + day, None), False), ((None, today - day), False)]
+        for (start, end), shown in cases:
+            s = self._settings(season_effect="snow", season_from=start, season_to=end)
+            self.assertEqual(s.season_active, "snow" if shown else "")
+            html = self.client.get("/uz/").content.decode()
+            self.assertEqual('data-effect="snow"' in html, shown, (start, end))
+        s = self._settings(season_from=today, season_to=today - day)
+        with self.assertRaises(ValidationError):
+            s.clean()

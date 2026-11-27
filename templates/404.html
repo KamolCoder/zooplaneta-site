@@ -2,8 +2,59 @@
 {% load site_tags %}
 {% block seo %}<title>404 — Zoo Planeta</title><meta name="robots" content="noindex">{% endblock %}
 {% block content %}
+{% home_page as home %}{% find_page "stores.StoreIndexPage" as stores_index %}{% find_page "catalog.CategoryIndexPage" as catalog_index %}
+{% if settings.core.SiteSettings.fun_404 %}
+<section class="nf"><div class="container nf-grid">
+  <div class="nf-text">
+    <b class="nf-code">404</b>
+    <h1>{% t "nf_title" %}</h1>
+    <p>{% t "nf_text" %}</p>
+    <div class="btn-row">
+      <a class="btn btn-dark" href="{% if home %}{{ home.url }}{% else %}/{% endif %}">{% t "to_home" %}</a>
+      {% if stores_index %}<a class="btn btn-outline" href="{{ stores_index.url }}"><svg class="icon"><use href="#i-pin"/></svg>{% t "stores_short" %}</a>{% endif %}
+      {% if catalog_index %}<a class="btn btn-outline" href="{{ catalog_index.url }}">{% t "catalog" %}</a>{% endif %}
+    </div>
+  </div>
+  <div class="nf-art">
+  <div class="nf-scene" data-nf-scene data-purr="{% t 'nf_purr' %}">
+    <svg class="nf-cat" viewBox="0 0 420 330" role="img" aria-label="{% t 'nf_cat' %}">
+      <g class="cat-tail"><path d="M236 266c56 6 74-30 50-58" class="tail-out"/><path d="M236 266c56 6 74-30 50-58" class="tail-in"/></g>
+      <rect class="cat-swipe" x="196" y="238" width="58" height="18" rx="9" fill="#fff"/>
+      <g class="cat" data-nf-cat>
+        <path d="M150 272c-12-42-2-86 46-96 48 10 58 54 46 96z" fill="#fff"/>
+        <path d="M182 270v-42M210 270v-42"/>
+        <ellipse cx="182" cy="268" rx="11" ry="6" fill="#fff"/><ellipse cx="210" cy="268" rx="11" ry="6" fill="#fff"/>
+        <g class="cat-head">
+          <path d="M150 128l6-46 28 24zM242 128l-6-46-28 24z" fill="#fff"/>
+          <path d="M158 104l1-10 8 7M234 104l-1-10-8 7" fill="none" class="thin"/>
+          <ellipse cx="196" cy="140" rx="50" ry="42" fill="#fff"/>
+          <g class="cat-eyes-open">
+            <circle cx="176" cy="136" r="9" fill="#fff"/><circle cx="216" cy="136" r="9" fill="#fff"/>
+            <circle class="cat-pupil" cx="176" cy="137" r="5" fill="#111" stroke="none"/>
+            <circle class="cat-pupil" cx="216" cy="137" r="5" fill="#111" stroke="none"/>
+          </g>
+          <path class="cat-eyes-closed" d="M167 138q9 7 18 0M207 138q9 7 18 0" fill="none"/>
+          <path d="M190 152h12l-6 6z" fill="#111"/>
+          <path d="M196 158q-5 7-12 3M196 158q5 7 12 3" fill="none" class="thin"/>
+          <path d="M148 150l-30-5M148 158l-30 4M244 150l30-5M244 158l30 4" class="thin"/>
+        </g>
+      </g>
+      <rect x="30" y="272" width="340" height="10" rx="5" fill="#111"/>
+      <path d="M62 282v44M338 282v44" class="leg"/>
+      <g class="cup" data-nf-cup>
+        <rect class="hit" x="296" y="230" width="60" height="50" fill="transparent"/>
+        <path d="M306 244h34v20a8 8 0 0 1-8 8h-18a8 8 0 0 1-8-8z" fill="#FDCC27"/>
+        <path d="M340 249a7.5 7.5 0 0 1 0 15" fill="none"/>
+      </g>
+    </svg>
+  </div>
+  <p class="nf-hint">{% t "nf_hint" %}</p>
+  </div>
+</div></section>
+{% else %}
 <section class="notfound"><div class="container">
   <b>404</b><h1>{% t "page_not_found" %}</h1><p>{% t "page_not_found_text" %}</p>
-  {% home_page as home %}<a class="btn btn-dark" href="{% if home %}{{ home.url }}{% else %}/{% endif %}">{% t "to_home" %}</a>
+  <a class="btn btn-dark" href="{% if home %}{{ home.url }}{% else %}/{% endif %}">{% t "to_home" %}</a>
 </div></section>
+{% endif %}
 {% endblock %}
