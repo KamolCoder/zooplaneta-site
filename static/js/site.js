@@ -59,46 +59,48 @@
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // "Give a paw" button: paw prints run across the screen, then a note links to the Give a Paw section
-  if (document.body.hasAttribute("data-paws")) {
-    let running = false;
-    const runPaws = () => {
-      if (running) return;
-      running = true;
-      const w = window.innerWidth, h = window.innerHeight;
-      const size = w < 640 ? 22 : 30;          // print size, px
-      const stride = size * 1.9;               // distance between steps
-      const ltr = Math.random() < .5;
-      const y0 = h * (.3 + Math.random() * .4), amp = h * .08, phase = Math.random() * 6;
-      const trail = document.createElement("div");
-      trail.className = "paw-trail";
-      trail.setAttribute("aria-hidden", "true");
-      const steps = Math.ceil((w + 2 * size) / stride);
-      for (let k = 0; k <= steps; k++) {
-        const t = k * stride - size;
-        const x = ltr ? t : w - t;
-        const y = y0 + Math.sin(t / 260 + phase) * amp;
-        const dy = Math.cos(t / 260 + phase) * amp / 260;     // slope of the path
-        const angle = Math.atan2(dy, ltr ? 1 : -1) * 180 / Math.PI + 90;
-        const side = k % 2 ? 1 : -1;                          // left / right foot
-        const off = side * size * .45;
-        const el = document.createElement("span");
-        el.className = "paw-step";
-        el.style.cssText = `width:${size}px;height:${size}px;left:${x - size / 2 + off * Math.cos(angle * Math.PI / 180)}px;` +
-          `top:${y - size / 2 + off * Math.sin(angle * Math.PI / 180)}px;transform:rotate(${angle}deg)`;
-        el.innerHTML = '<svg viewBox="0 0 100 100"><use href="#i-paw"/></svg>';
-        trail.appendChild(el);
-        // Web Animations, not CSS: the reduced-motion rule in site.css switches off every CSS animation.
-        // With reduced motion the prints only fade in and out, without growing.
-        el.animate(reducedMotion
-          ? [{ opacity: 0 }, { opacity: .9, offset: .15 }, { opacity: .9, offset: .65 }, { opacity: 0 }]
-          : [{ opacity: 0, scale: .6 }, { opacity: .9, scale: 1, offset: .12 }, { opacity: .9, offset: .65 }, { opacity: 0 }],
-          { duration: 1500, delay: k * 110, easing: "ease", fill: "both" });
-      }
-      document.body.appendChild(trail);
-      setTimeout(() => { trail.remove(); running = false; }, steps * 110 + 1600);
-    };
+  // paw prints running across the screen (the "Give a paw" button, the Konami code, season.js)
+  let running = false;
+  const runPaws = () => {
+    if (running) return;
+    running = true;
+    const w = window.innerWidth, h = window.innerHeight;
+    const size = w < 640 ? 22 : 30;          // print size, px
+    const stride = size * 1.9;               // distance between steps
+    const ltr = Math.random() < .5;
+    const y0 = h * (.3 + Math.random() * .4), amp = h * .08, phase = Math.random() * 6;
+    const trail = document.createElement("div");
+    trail.className = "paw-trail";
+    trail.setAttribute("aria-hidden", "true");
+    const steps = Math.ceil((w + 2 * size) / stride);
+    for (let k = 0; k <= steps; k++) {
+      const t = k * stride - size;
+      const x = ltr ? t : w - t;
+      const y = y0 + Math.sin(t / 260 + phase) * amp;
+      const dy = Math.cos(t / 260 + phase) * amp / 260;     // slope of the path
+      const angle = Math.atan2(dy, ltr ? 1 : -1) * 180 / Math.PI + 90;
+      const side = k % 2 ? 1 : -1;                          // left / right foot
+      const off = side * size * .45;
+      const el = document.createElement("span");
+      el.className = "paw-step";
+      el.style.cssText = `width:${size}px;height:${size}px;left:${x - size / 2 + off * Math.cos(angle * Math.PI / 180)}px;` +
+        `top:${y - size / 2 + off * Math.sin(angle * Math.PI / 180)}px;transform:rotate(${angle}deg)`;
+      el.innerHTML = '<svg viewBox="0 0 100 100"><use href="#i-paw"/></svg>';
+      trail.appendChild(el);
+      // Web Animations, not CSS: the reduced-motion rule in site.css switches off every CSS animation.
+      // With reduced motion the prints only fade in and out, without growing.
+      el.animate(reducedMotion
+        ? [{ opacity: 0 }, { opacity: .9, offset: .15 }, { opacity: .9, offset: .65 }, { opacity: 0 }]
+        : [{ opacity: 0, scale: .6 }, { opacity: .9, scale: 1, offset: .12 }, { opacity: .9, offset: .65 }, { opacity: 0 }],
+        { duration: 1500, delay: k * 110, easing: "ease", fill: "both" });
+    }
+    document.body.appendChild(trail);
+    setTimeout(() => { trail.remove(); running = false; }, steps * 110 + 1600);
+  };
+  window.ZP = { paws: runPaws };
 
+  // "Give a paw" button: paw prints, then a note links to the Give a Paw section
+  if (document.body.hasAttribute("data-paws")) {
     const fab = document.querySelector("[data-paw-fab]");
     const toast = document.querySelector("[data-paw-toast]");
     if (fab) {

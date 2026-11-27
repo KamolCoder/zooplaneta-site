@@ -1,12 +1,16 @@
 from django.db import models
-from wagtail.admin.panels import FieldPanel, MultiFieldPanel
+from modelcluster.fields import ParentalKey
+from modelcluster.models import ClusterableModel
+from wagtail.admin.panels import FieldPanel, FieldRowPanel, InlinePanel, MultiFieldPanel
 from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
+from wagtail.models import Orderable
 
-from core.ui import current_lang
+from core.season import EFFECT_CHOICES, HOLIDAYS, effect_on
+from core.ui import current_lang, t
 
 
 @register_setting(icon="site")
-class SiteSettings(BaseGenericSetting):
+class SiteSettings(ClusterableModel, BaseGenericSetting):
     """Contacts shown in the header, footer and contact page (one set for all languages)."""
 
     phone = models.CharField("Справочная (телефон)", max_length=32, default="+998 71 200-00-00")
@@ -50,12 +54,13 @@ class SiteSettings(BaseGenericSetting):
                                                 "и появляется ссылка на раздел Give a Paw")
     fun_404 = models.BooleanField("Интерактивная страница 404", default=True,
                                   help_text="Кот, которого можно погладить; выключено — обычная страница «не найдено»")
-    SEASON_CHOICES = [("", "Нет"), ("snow", "Снег")]
-    season_effect = models.CharField("Сезонное оформление", max_length=16, choices=SEASON_CHOICES, blank=True,
-                                     help_text="Показывается вверху каждой страницы в заданные даты")
-    season_from = models.DateField("Показывать с", null=True, blank=True, help_text="Пусто — сразу")
-    season_to = models.DateField("Показывать по", null=True, blank=True,
-                                 help_text="Включительно; пусто — пока не выключат вручную")
+    season_enabled = models.BooleanField("Сезонное оформление включено", default=False,
+                                         help_text="Эффекты показываются по периодам ниже")
+    season_greeting_ru = models.CharField("Поздравление (RU)", max_length=120, blank=True,
+                                          help_text="Показывается раз за визит в праздник; пусто — стандартный текст "
+                                                    "(«С Новым годом!», «С праздником Навруз!», «С праздником Хайит!»)")
+    season_greeting_uz = models.CharField("Поздравление (UZ)", max_length=120, blank=True)
+    season_greeting_en = models.CharField("Поздравление (EN)", max_length=120, blank=True)
 
     panels = [
         MultiFieldPanel([FieldPanel("phone"), FieldPanel("phone_hours"), FieldPanel("short_phone"), FieldPanel("email"),
@@ -69,8 +74,11 @@ class SiteSettings(BaseGenericSetting):
         MultiFieldPanel([FieldPanel("legal_name"), FieldPanel("tax_id"), FieldPanel("address_ru"),
                          FieldPanel("address_uz"), FieldPanel("address_en"), FieldPanel("office_lat"),
                          FieldPanel("office_lng"), FieldPanel("privacy_page")], "Компания"),
-        MultiFieldPanel([FieldPanel("easter_paws"), FieldPanel("fun_404"), FieldPanel("season_effect"),
-                         FieldPanel("season_from"), FieldPanel("season_to")], "Интерактив и сезонное оформление"),
+        MultiFieldPanel([FieldPanel("easter_paws"), FieldPanel("fun_404")], "Интерактив"),
+        MultiFieldPanel([FieldPanel("season_enabled"), FieldPanel("season_greeting_ru"), FieldPanel("season_greeting_uz"),
+                         FieldPanel("season_greeting_en")], "Сезонное оформление"),
+        InlinePanel("season_periods", label="Период", heading="Периоды сезонного оформления",
+                    help_text="Праздник важнее сезона; если совпали два одинаковых — действует верхний в списке"),
     ]
 
     class Meta:
@@ -99,22 +107,48 @@ class SiteSettings(BaseGenericSetting):
         for f in ("yandex_verification", "google_verification"):
             if getattr(self, f) and not re.fullmatch(r"[\w\-]+", getattr(self, f)):
                 errors[f] = "Вставьте только код из content, без тега"
-        if self.season_from and self.season_to and self.season_from > self.season_to:
-            errors["season_to"] = "Дата окончания раньше даты начала"
         if errors:
             raise ValidationError(errors)
 
     @property
     def season_active(self) -> str:
-        """The seasonal effect to show today ("" when none): the dates are inclusive, blank means open-ended."""
-        if not self.season_effect:
+        """The seasonal effect to show today ("" when none), see core/season.py."""
+        if not self.season_enabled:
             return ""
         from django.utils import timezone
-        today = timezone.localdate()
-        if (self.season_from and today < self.season_from) or (self.season_to and today > self.season_to):
+        return effect_on(self.season_periods.all(), timezone.localdate())
+
+    def greeting_for(self, effect: str) -> str:
+        """Greeting shown once per visit on a holiday ("" for seasons of the year)."""
+        if effect not in HOLIDAYS:
             return ""
-        return self.season_effect
+        return getattr(self, f"season_greeting_{current_lang()}", "") or t(f"greet_{effect}")
 
     @property
     def address(self) -> str:
         return getattr(self, f"address_{current_lang()}") or self.address_ru
+
+
+class SeasonPeriod(Orderable):
+    """One period of seasonal decoration (effect + dates), edited inline in SiteSettings."""
+
+    setting = ParentalKey(SiteSettings, related_name="season_periods", on_delete=models.CASCADE)
+    effect = models.CharField("Эффект", max_length=16, choices=EFFECT_CHOICES)
+    date_from = models.DateField("Включить с")
+    date_to = models.DateField("Выключить после", help_text="Включительно")
+    yearly = models.BooleanField("Каждый год", default=True,
+                                 help_text="Год в датах не важен, период может переходить через Новый год. "
+                                           "Для Хайита снимите галочку и обновляйте даты каждый год")
+
+    panels = [FieldRowPanel([FieldPanel("effect"), FieldPanel("date_from"), FieldPanel("date_to"), FieldPanel("yearly")])]
+
+    class Meta(Orderable.Meta):
+        verbose_name = "Период сезонного оформления"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if not self.yearly and self.date_from and self.date_to and self.date_from > self.date_to:
+            raise ValidationError({"date_to": "Дата окончания раньше даты начала"})
+
+    def __str__(self):
+        return f"{self.get_effect_display()}: {self.date_from:%d.%m} – {self.date_to:%d.%m}"

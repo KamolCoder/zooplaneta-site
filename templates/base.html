@@ -1,5 +1,5 @@
 {% load static wagtailcore_tags wagtailimages_tags wagtailuserbar site_tags %}<!DOCTYPE html>
-{% lang as cur_lang %}{% home_page as home %}{% find_page "stores.StoreIndexPage" as stores_index %}{% find_page "pages.CareersPage" as careers %}{% find_page "pages.PartnersPage" as partners %}{% find_page "pages.ContactPage" as contact_page %}{% find_page "pages.PromoIndexPage" as promo_index %}{% find_page "pages.NewsIndexPage" as news_index %}{% find_page "catalog.CategoryIndexPage" as catalog_index %}{% find_page "pages.CharityIndexPage" as charity_index %}{% find_page "pages.DeliveryPage" as delivery_page %}{% find_page "pages.LoyaltyPage" as loyalty_page %}
+{% lang as cur_lang %}{% home_page as home %}{% find_page "stores.StoreIndexPage" as stores_index %}{% find_page "pages.CareersPage" as careers %}{% find_page "pages.PartnersPage" as partners %}{% find_page "pages.ContactPage" as contact_page %}{% find_page "pages.PromoIndexPage" as promo_index %}{% find_page "pages.NewsIndexPage" as news_index %}{% find_page "catalog.CategoryIndexPage" as catalog_index %}{% find_page "pages.CharityIndexPage" as charity_index %}{% find_page "pages.DeliveryPage" as delivery_page %}{% find_page "pages.LoyaltyPage" as loyalty_page %}{% season_now as season %}
 <html lang="{{ cur_lang }}">
 <head>
 <meta charset="utf-8">
@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="{% static 'css/site.css' %}">
 {% block extra_head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}"{% if settings.core.SiteSettings.easter_paws %} data-paws{% endif %}>
+<body class="{% block body_class %}{% endblock %}"{% if settings.core.SiteSettings.easter_paws %} data-paws{% endif %}{% if season.effect %} data-season="{{ season.effect }}"{% endif %}>
 {% include "includes/icons.html" %}
 <a class="skip" href="#main">{% t "skip" %}</a>
 {% language_links as langs %}
@@ -152,7 +152,7 @@
 {% wagtailuserbar "bottom-left" %}
 {% analytics %}
 <script src="{% static 'js/site.js' %}" defer></script>
-{% with season=settings.core.SiteSettings.season_active %}{% if season %}<script src="{% static 'js/season.js' %}" data-effect="{{ season }}" defer></script>{% endif %}{% endwith %}
+{% if season.effect %}<script src="{% static 'js/season.js' %}" data-effect="{{ season.effect }}"{% if season.greeting %} data-greeting="{{ season.greeting }}"{% endif %} defer></script>{% endif %}
 {% block extra_js %}{% endblock %}
 </body>
 </html>

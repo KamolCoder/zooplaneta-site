@@ -545,20 +545,78 @@ class InteractiveTests(TestCase):
         self.assertNotIn("data-paw-fab", ru)
         self.assertNotIn("data-paws", ru)
 
-    def test_season_dates(self):
+    def _periods(self, *rows):
+        """Replace the season periods: rows of (effect, date_from, date_to, yearly)."""
+        from core.models import SeasonPeriod
+        s = self._settings(season_enabled=True)
+        s.season_periods.all().delete()
+        for i, (effect, start, end, yearly) in enumerate(rows):
+            SeasonPeriod.objects.create(setting=s, sort_order=i, effect=effect, date_from=start, date_to=end, yearly=yearly)
+        return s
+
+    def test_new_site_gets_default_periods(self):
+        from core.models import SiteSettings
+        from core.season import DEFAULT_PERIODS
+        s = SiteSettings.load()
+        self.assertEqual([p.effect for p in s.season_periods.all()], [p[0] for p in DEFAULT_PERIODS])
+        self.assertFalse(s.season_enabled)
+        self.assertNotIn("season.js", self.client.get("/ru/").content.decode())   # off until switched on
+
+    def test_default_calendar(self):
+        import datetime
+        from core.models import SiteSettings
+        from core.season import effect_on
+        periods = list(SiteSettings.load().season_periods.all())
+        d = datetime.date
+        expected = {
+            d(2027, 1, 5): "newyear", d(2027, 1, 11): "winter", d(2028, 2, 29): "winter", d(2027, 3, 1): "spring",
+            d(2027, 3, 10): "hayit", d(2027, 3, 13): "spring", d(2027, 3, 14): "navruz", d(2027, 3, 25): "spring",
+            d(2027, 5, 17): "hayit", d(2027, 5, 20): "spring", d(2028, 5, 17): "spring",        # Hayit is one-off
+            d(2027, 7, 1): "summer", d(2027, 10, 1): "autumn", d(2027, 12, 19): "winter", d(2027, 12, 31): "newyear",
+        }
+        for day, effect in expected.items():
+            self.assertEqual(effect_on(periods, day), effect, day)
+
+    def test_custom_periods_on_the_page(self):
         import datetime
         from django.core.exceptions import ValidationError
         from django.utils import timezone
+        from core.models import SeasonPeriod
         today = timezone.localdate()
         day = datetime.timedelta(days=1)
-        self.assertNotIn("season.js", self.client.get("/ru/").content.decode())   # off by default
-        cases = [((None, None), True), ((today, today), True), ((today - day, None), True),
-                 ((today + day, None), False), ((None, today - day), False)]
+        cases = [((today, today), True), ((today - day, today + day), True), ((today + day, today + 2 * day), False),
+                 ((today - 2 * day, today - day), False)]
         for (start, end), shown in cases:
-            s = self._settings(season_effect="snow", season_from=start, season_to=end)
-            self.assertEqual(s.season_active, "snow" if shown else "")
+            self._periods(("autumn", start, end, False))
             html = self.client.get("/uz/").content.decode()
-            self.assertEqual('data-effect="snow"' in html, shown, (start, end))
-        s = self._settings(season_from=today, season_to=today - day)
+            self.assertEqual('data-effect="autumn"' in html, shown, (start, end))
+            self.assertEqual('data-season="autumn"' in html, shown)
+            self.assertNotIn("data-greeting", html)                     # seasons have no greeting
+        # yearly: another year's dates still match by day and month
+        self._periods(("summer", today.replace(year=2000) if not (today.month == 2 and today.day == 29) else today,
+                       today.replace(year=2000) if not (today.month == 2 and today.day == 29) else today, True))
+        self.assertIn('data-effect="summer"', self.client.get("/ru/").content.decode())
+        self._settings(season_enabled=False)
+        self.assertNotIn("season.js", self.client.get("/ru/").content.decode())
         with self.assertRaises(ValidationError):
-            s.clean()
+            SeasonPeriod(effect="hayit", date_from=today, date_to=today - day, yearly=False).clean()
+        SeasonPeriod(effect="winter", date_from=d2(12, 1), date_to=d2(2, 28), yearly=True).clean()   # crosses New Year
+
+    def test_holiday_beats_season_and_greets(self):
+        import datetime
+        from django.utils import timezone
+        today = timezone.localdate()
+        wide = (today - datetime.timedelta(days=30), today + datetime.timedelta(days=30))
+        s = self._periods(("spring", *wide, False), ("navruz", today, today, False))
+        ru = self.client.get("/ru/").content.decode()
+        self.assertIn('data-season="navruz"', ru)
+        self.assertIn('data-greeting="С праздником Навруз!"', ru)
+        self.assertIn('data-greeting="Navroʻz muborak!"', self.client.get("/uz/").content.decode())
+        s.season_greeting_ru = "Навруз муборак, друзья!"
+        s.save()
+        self.assertIn('data-greeting="Навруз муборак, друзья!"', self.client.get("/ru/").content.decode())
+
+
+def d2(month, day):
+    import datetime
+    return datetime.date(2000, month, day)
