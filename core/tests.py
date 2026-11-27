@@ -369,3 +369,47 @@ class SamplePhotoTests(TestCase):
         self.assertFalse(CategoryPage.objects.filter(image__isnull=False).exists())
         self.assertEqual(self.client.get("/ru/").status_code, 200)
         self.assertEqual(self.client.get("/ru/about/").status_code, 200)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class DeliveryLoyaltyTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_demo", verbosity=0)
+
+    def set_links(self):
+        from core.models import SiteSettings
+        s = SiteSettings.load()
+        s.app_store_url = "https://apps.apple.com/app/id1"
+        s.google_play_url = "https://play.google.com/store/apps/details?id=uz.zp"
+        s.uds_url = "https://zp.uds.app/c/join?ref=x"
+        s.uds_code = "ZOOPLANETA"
+        s.short_phone = "1234"
+        s.save()
+
+    def test_pages_without_links_hide_buttons(self):
+        resp = self.client.get("/ru/delivery/")
+        self.assertContains(resp, "Express24")
+        self.assertNotContains(resp, "app-btn")
+        self.assertNotContains(self.client.get("/ru/bonus/"), "data-copy")
+
+    def test_links_buttons_qr_and_short_number(self):
+        self.set_links()
+        html = self.client.get("/ru/delivery/").content.decode()
+        self.assertIn('data-android="https://play.google.com/store/apps/details?id=uz.zp"', html)
+        self.assertIn('class="segno"', html)
+        html = self.client.get("/ru/bonus/").content.decode()
+        self.assertIn('data-copy="ZOOPLANETA"', html)
+        self.assertIn("https://zp.uds.app/c/join?ref=x", html)
+        home = self.client.get("/ru/").content.decode()
+        self.assertIn("service-card-dark", home)
+        self.assertIn('class="mobile-bar"', home)
+        self.assertIn('href="tel:1234"', home)
+
+    def test_english_has_no_delivery_section(self):
+        html = self.client.get("/en/").content.decode()
+        self.assertNotIn("service-card", html)
+        self.assertEqual(self.client.get("/en/delivery/").status_code, 404)
+
+    def test_organization_contact_point(self):
+        self.assertContains(self.client.get("/ru/"), '"contactType": "customer service"')

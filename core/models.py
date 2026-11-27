@@ -11,6 +11,8 @@ class SiteSettings(BaseGenericSetting):
 
     phone = models.CharField("Справочная (телефон)", max_length=32, default="+998 71 200-00-00")
     phone_hours = models.CharField("Часы справочной", max_length=32, default="09:00–21:00", blank=True)
+    short_phone = models.CharField("Короткий номер колл-центра", max_length=10, blank=True,
+                                   help_text="Напр. 1234 — показывается рядом с основным номером")
     email = models.EmailField("E-mail для покупателей", default="info@zooplaneta.uz")
     partners_email = models.EmailField("E-mail для партнёров", default="partners@zooplaneta.uz")
     hr_phone = models.CharField("Телефон отдела кадров", max_length=32, blank=True, default="+998 71 200-00-01")
@@ -18,6 +20,12 @@ class SiteSettings(BaseGenericSetting):
     instagram = models.CharField("Instagram (без @)", max_length=64, blank=True, default="zooplaneta.uz")
     facebook = models.URLField("Facebook (ссылка)", blank=True)
     youtube = models.URLField("YouTube (ссылка)", blank=True)
+
+    app_store_url = models.URLField("Приложение доставки: App Store", blank=True)
+    google_play_url = models.URLField("Приложение доставки: Google Play", blank=True)
+    uds_url = models.URLField("UDS: ссылка на компанию", blank=True,
+                              help_text="Ссылка-приглашение из кабинета UDS (вступление в программу)")
+    uds_code = models.CharField("UDS: промокод", max_length=32, blank=True)
 
     yandex_verification = models.CharField("Яндекс.Вебмастер: код подтверждения", max_length=64, blank=True,
                                            help_text="Только значение content из meta-тега yandex-verification")
@@ -38,8 +46,10 @@ class SiteSettings(BaseGenericSetting):
     office_lng = models.DecimalField("Офис: долгота", max_digits=9, decimal_places=6, null=True, blank=True)
 
     panels = [
-        MultiFieldPanel([FieldPanel("phone"), FieldPanel("phone_hours"), FieldPanel("email"),
+        MultiFieldPanel([FieldPanel("phone"), FieldPanel("phone_hours"), FieldPanel("short_phone"), FieldPanel("email"),
                          FieldPanel("partners_email"), FieldPanel("hr_phone")], "Контакты"),
+        MultiFieldPanel([FieldPanel("app_store_url"), FieldPanel("google_play_url"), FieldPanel("uds_url"),
+                         FieldPanel("uds_code")], "Приложение и бонусы"),
         MultiFieldPanel([FieldPanel("telegram"), FieldPanel("instagram"), FieldPanel("facebook"),
                          FieldPanel("youtube")], "Соцсети"),
         MultiFieldPanel([FieldPanel("yandex_verification"), FieldPanel("google_verification"),
@@ -55,6 +65,10 @@ class SiteSettings(BaseGenericSetting):
     @property
     def phone_href(self) -> str:
         return "".join(c for c in self.phone if c.isdigit() or c == "+")
+
+    @property
+    def has_app(self) -> bool:
+        return bool(self.app_store_url or self.google_play_url)
 
     @property
     def hr_phone_href(self) -> str:

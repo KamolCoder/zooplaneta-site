@@ -29,6 +29,24 @@
     revealEls.forEach((el) => el.classList.add("is-in"));
   }
 
+  // "Get the app" buttons go straight to the right store on phones
+  const ua = navigator.userAgent || "";
+  const platform = /iPhone|iPad|iPod/.test(ua) ? "ios" : /Android/.test(ua) ? "android" : "";
+  document.querySelectorAll("[data-app-link]").forEach((a) => {
+    const url = platform && a.dataset[platform];
+    if (url) { a.href = url; a.target = "_blank"; a.rel = "noopener"; }
+  });
+
+  // copy a promo code
+  document.querySelectorAll("[data-copy]").forEach((btn) => btn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(btn.dataset.copy);
+      const label = btn.lastChild.textContent;
+      btn.lastChild.textContent = btn.dataset.copied;
+      setTimeout(() => { btn.lastChild.textContent = label; }, 1800);
+    } catch (e) { /* clipboard blocked: the code is visible anyway */ }
+  }));
+
   // hero slider
   document.querySelectorAll("[data-slider]").forEach((root) => {
     const slides = [...root.querySelectorAll(".slide")];

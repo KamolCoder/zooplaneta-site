@@ -22,7 +22,9 @@ self-hosted Onest font and Leaflet (no CDNs).
 - `pages/` — Home (fixed section order: hero → intro+stats → categories → promos → about+advantages → stores map →
   news → Give a Paw → brands → extra blocks), Standard, Contact, Promo index/page, News index/page (rubric `kind`,
   `?kind=` filter, NewsArticle JSON-LD), Careers/Vacancy, Partners, CharityIndex/CharityPage (Give a Paw: project /
-  event / animal story, RU+UZ).
+  event / animal story, RU+UZ), DeliveryPage (own app + aggregators StreamField) and LoyaltyPage (UDS), RU+UZ.
+  App Store / Google Play / UDS link + code / short call-centre number live in SiteSettings; `{% qr url %}` (segno)
+  renders inline SVG QR codes; phones get a fixed bottom bar (call · delivery · stores).
 - `catalog/` — informational catalogue: CategoryIndexPage/CategoryPage (icon, subcategories, brands) and the `Brand`
   snippet. No products/prices; `code_1c` fields are the hook for a future 1C OData sync.
   `FormPageMixin`: POST → `leads.handling.handle_lead_form` (honeypot, 10/hour per IP, notify) → `?sent=1`.

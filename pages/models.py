@@ -3,10 +3,11 @@ from django.db import models
 from django.utils import timezone
 from wagtail.admin.panels import FieldPanel, FieldRowPanel, MultiFieldPanel
 from wagtail.fields import RichTextField, StreamField
+from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Page
 from wagtail.search import index
 
-from core.blocks import AdvantageBlock, HeroSlideBlock, StatItem, body_blocks
+from core.blocks import AdvantageBlock, AggregatorBlock, HeroSlideBlock, StatItem, StepBlock, body_blocks
 from leads.forms import FeedbackForm, JobApplicationForm, PartnerRequestForm
 from leads.handling import handle_lead_form
 
@@ -79,6 +80,7 @@ class HomePage(Page):
     advantages = StreamField([("item", AdvantageBlock())], blank=True, verbose_name="Преимущества",
                              use_json_field=True)
     show_store_finder = models.BooleanField("Показывать карту магазинов", default=True)
+    show_services = models.BooleanField("Показывать «Доставка и бонусы»", default=True)
     show_news = models.BooleanField("Показывать новости", default=True)
     show_charity = models.BooleanField("Показывать Give a Paw", default=True)
     show_brands = models.BooleanField("Показывать бренды", default=True)
@@ -91,7 +93,7 @@ class HomePage(Page):
         MultiFieldPanel([FieldPanel("about_title"), FieldPanel("about_text"), FieldPanel("about_image"),
                          FieldPanel("about_page"), FieldPanel("advantages")], "О компании и преимущества"),
         MultiFieldPanel([FieldPanel("show_categories"), FieldPanel("show_promos"), FieldPanel("show_store_finder"),
-                         FieldPanel("show_news"), FieldPanel("show_charity"), FieldPanel("show_brands")],
+                         FieldPanel("show_services"), FieldPanel("show_news"), FieldPanel("show_charity"), FieldPanel("show_brands")],
                         "Автоматические блоки"),
         FieldPanel("body"),
     ]
@@ -128,6 +130,8 @@ class HomePage(Page):
         ctx["charity_index"] = charity
         ctx["charity_items"] = charity.items()[:3] if charity else []
         ctx["brands"] = Brand.objects.filter(is_featured=True).select_related("logo")[:18]
+        ctx["delivery_page"] = DeliveryPage.objects.live().filter(locale=self.locale).first()
+        ctx["loyalty_page"] = LoyaltyPage.objects.live().filter(locale=self.locale).first()
         return ctx
 
 
@@ -470,3 +474,63 @@ class CharityPage(ImageMixin, Page):
     def status_label(self) -> str:
         from core.ui import t
         return t(f"animal_{self.animal_status}") if self.animal_status else ""
+
+
+# ── delivery app + aggregators, UDS loyalty ──────────────────────────────────
+
+class DeliveryPage(ImageMixin, Page):
+    """Own delivery app (store links live in SiteSettings) and the aggregators where Zoo Planeta sells."""
+
+    intro = models.TextField("Вступление", blank=True)
+    app_title = models.CharField("Заголовок о приложении", max_length=120, blank=True)
+    app_text = models.TextField("Текст о приложении", blank=True)
+    app_features = StreamField([("item", AdvantageBlock())], blank=True, verbose_name="Возможности приложения",
+                               use_json_field=True)
+    screenshots = StreamField([("image", ImageChooserBlock(label="Скриншот"))], blank=True,
+                              verbose_name="Скриншоты приложения", use_json_field=True)
+    steps = StreamField([("step", StepBlock())], blank=True, verbose_name="Как заказать", use_json_field=True)
+    conditions = RichTextField("Условия доставки", blank=True, features=["bold", "italic", "link", "ul", "ol"],
+                               help_text="Зоны, сроки, минимальная сумма, оплата")
+    aggregators = StreamField([("service", AggregatorBlock())], blank=True, verbose_name="Сервисы доставки",
+                              use_json_field=True)
+    body = StreamField(body_blocks(), blank=True, verbose_name="Дополнительно (напр. вопросы)", use_json_field=True)
+
+    content_panels = Page.content_panels + [
+        FieldPanel("intro"), FieldPanel("image"),
+        MultiFieldPanel([FieldPanel("app_title"), FieldPanel("app_text"), FieldPanel("app_features"),
+                         FieldPanel("screenshots")], "Приложение Zoo Planeta",
+                        help_text="Ссылки на App Store и Google Play — в Настройках → Контакты и реквизиты"),
+        FieldPanel("steps"), FieldPanel("conditions"), FieldPanel("aggregators"), FieldPanel("body"),
+    ]
+    parent_page_types = ["pages.HomePage"]
+    subpage_types = []
+    max_count_per_parent = 1
+    template = "pages/delivery_page.html"
+
+    class Meta:
+        verbose_name = "Доставка (приложение и сервисы)"
+
+
+class LoyaltyPage(ImageMixin, Page):
+    """UDS loyalty programme. The join link and promo code live in SiteSettings."""
+
+    intro = models.TextField("Вступление", blank=True)
+    cashback = models.CharField("Кешбэк", max_length=30, blank=True, help_text="Крупная цифра, напр. «до 5%»")
+    cashback_note = models.CharField("Подпись к кешбэку", max_length=120, blank=True,
+                                     help_text="Напр. «баллами с каждой покупки»")
+    steps = StreamField([("step", StepBlock())], blank=True, verbose_name="Как подключиться", use_json_field=True)
+    rules = RichTextField("Правила программы", blank=True, features=["bold", "italic", "link", "ul", "ol"])
+    body = StreamField(body_blocks(), blank=True, verbose_name="Дополнительно (напр. вопросы)", use_json_field=True)
+
+    content_panels = Page.content_panels + [
+        FieldPanel("intro"), FieldPanel("image"),
+        FieldRowPanel([FieldPanel("cashback"), FieldPanel("cashback_note")], heading="Главная цифра"),
+        FieldPanel("steps"), FieldPanel("rules"), FieldPanel("body"),
+    ]
+    parent_page_types = ["pages.HomePage"]
+    subpage_types = []
+    max_count_per_parent = 1
+    template = "pages/loyalty_page.html"
+
+    class Meta:
+        verbose_name = "Бонусы UDS"

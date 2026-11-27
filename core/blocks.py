@@ -66,6 +66,26 @@ class AdvantageBlock(blocks.StructBlock):
         icon = "pick"
 
 
+class StepBlock(blocks.StructBlock):
+    title = blocks.CharBlock(label="Заголовок")
+    text = blocks.TextBlock(label="Текст", required=False)
+
+    class Meta:
+        label = "Шаг"
+        icon = "list-ol"
+
+
+class AggregatorBlock(blocks.StructBlock):
+    name = blocks.CharBlock(label="Название")
+    logo = ImageChooserBlock(label="Логотип", required=False)
+    url = blocks.URLBlock(label="Ссылка на Zoo Planeta в сервисе", required=False)
+    note = blocks.CharBlock(label="Примечание", required=False, help_text="Напр. «Доставка от 30 минут»")
+
+    class Meta:
+        label = "Сервис доставки"
+        icon = "link-external"
+
+
 class StatsBlock(blocks.StructBlock):
     items = blocks.ListBlock(StatItem(), label="Показатели", min_num=2, max_num=6)
 

@@ -23,6 +23,9 @@ URL = "https://images.unsplash.com/photo-{id}?w=1600&q=78&fm=jpg&fit=max"
 # key -> (Unsplash photo id, title)
 PHOTOS = {
     "hero": ("1583512603805-3cc6b41f3edb", "щенок на жёлтом фоне"),
+    "hero_delivery": ("1530281700549-e82e7bf110d6", "собака бежит к хозяину"),
+    "delivery": ("1605568427561-40dd23c2acea", "хаски"),
+    "loyalty": ("1548681528-6a5c45b66b42", "кот"),
     "hero_cat": ("1514888286974-6c03e2ca1dba", "кошка"),
     "hero_team": ("1516734212186-a967f81ad0d7", "уход за собакой"),
     "hero_partners": ("1548199973-03cce0bbc87b", "две собаки"),
@@ -142,6 +145,8 @@ class Command(BaseCommand):
         simple = [
             ("pages.StandardPage", {"slug": "about"}, "image", "about_head"),
             ("pages.CharityIndexPage", {}, "image", "charity"),
+            ("pages.DeliveryPage", {}, "image", "delivery"),
+            ("pages.LoyaltyPage", {}, "image", "loyalty"),
             ("pages.CareersPage", {}, "image", "careers"),
             ("pages.PartnersPage", {}, "image", "partners"),
         ]
@@ -175,7 +180,8 @@ class Command(BaseCommand):
 
         # home: slides, about photo
         from pages.models import HomePage
-        slide_keys = {"ru": ["hero", "hero_cat", "hero_team"], "uz": ["hero", "hero_cat", "hero_team"],
+        slide_keys = {"ru": ["hero", "hero_delivery", "hero_cat", "hero_team"],
+                      "uz": ["hero", "hero_delivery", "hero_cat", "hero_team"],
                       "en": ["hero", "hero_partners"]}
         for home in HomePage.objects.all():
             keys = slide_keys.get(home.locale.language_code, slide_keys["ru"])

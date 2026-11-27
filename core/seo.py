@@ -83,6 +83,8 @@ def _organization(full: bool = False) -> dict:
         org.update({"legalName": s.legal_name, "telephone": s.phone, "email": s.email,
                     "address": {"@type": "PostalAddress", "streetAddress": s.address_en or s.address_ru,
                                 "addressLocality": "Tashkent", "addressCountry": "UZ"}})
+        org["contactPoint"] = [{"@type": "ContactPoint", "telephone": s.phone, "contactType": "customer service",
+                                "areaServed": "UZ", "availableLanguage": ["ru", "uz"]}]
         same_as = [u for u in (f"https://t.me/{s.telegram}" if s.telegram else "",
                                f"https://instagram.com/{s.instagram}" if s.instagram else "",
                                s.facebook, s.youtube) if u]
