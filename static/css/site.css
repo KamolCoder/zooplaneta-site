@@ -915,15 +915,41 @@ a.aggregator:hover { border-color: var(--black); box-shadow: var(--shadow); }
 }
 
 .paw-trail { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
-.paw-step { position: absolute; color: var(--black); opacity: 0; animation: paw-step 1.5s ease forwards; }
+.paw-step { position: absolute; color: var(--black); opacity: 0; }  /* animated from site.js */
 .paw-step svg { width: 100%; height: 100%; }
 .paw-step .icon-fill { fill: currentColor; }
-@keyframes paw-step {
-  0% { opacity: 0; scale: .6; }
-  12% { opacity: .9; scale: 1; }
-  65% { opacity: .9; }
-  100% { opacity: 0; }
-}
 
-/* ── seasonal effect (season.js): snow over the top of every page ─────────── */
+/* ── seasonal decoration (season.js + body[data-season]) ──────────────────── */
 .season-canvas { position: absolute; top: 0; left: 0; width: 100%; z-index: 55; pointer-events: none; }
+/* New Year: garland under the header, hat on the logo */
+.garland { position: absolute; left: 0; top: 100%; pointer-events: none; overflow: visible; }
+.garland .bulb { pointer-events: auto; transform-box: fill-box; transform-origin: 50% 0; animation: bulb-twinkle 2.4s ease-in-out infinite; }
+.garland .bulb.pop { animation: bulb-pop .7s ease; }
+@keyframes bulb-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes bulb-pop { 0% { opacity: 1; scale: 1; } 30% { scale: 1.5; } 100% { opacity: 1; scale: 1; } }
+body[data-season="newyear"] .header .brand { position: relative; }
+body[data-season="newyear"] .header .brand::after { content: ""; position: absolute; top: -13px; right: -15px; width: 36px; height: 31px;
+  transform: rotate(20deg); pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 34'%3E%3Cpath d='M6 26C9 13 19 4 32 6c-2 6-2 12 2 20z' fill='%23C93C3C' stroke='%23111' stroke-width='1.6' stroke-linejoin='round'/%3E%3Crect x='3' y='23' width='34' height='9' rx='4.5' fill='%23fff' stroke='%23111' stroke-width='1.6'/%3E%3Ccircle cx='32.5' cy='6' r='4' fill='%23fff' stroke='%23111' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat center / contain; }
+/* Navruz: ornament strip under the header, tulips along the bottom of the first block */
+body[data-season="navruz"] .header::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 12px; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='12'%3E%3Crect width='36' height='12' fill='%23FDCC27'/%3E%3Crect width='36' height='1.2' fill='%23111'/%3E%3Crect y='10.8' width='36' height='1.2' fill='%23111'/%3E%3Cpath d='M18 2.2 22 6l-4 3.8L14 6z' fill='%23111'/%3E%3Ccircle cx='4.5' cy='6' r='1.6' fill='%23111'/%3E%3Ccircle cx='31.5' cy='6' r='1.6' fill='%23111'/%3E%3Cpath d='M9 6h2M25 6h2' stroke='%23111' stroke-width='1.2'/%3E%3C/svg%3E") repeat-x; }
+.tulips { position: absolute; top: 0; left: 0; width: 100%; z-index: 54; pointer-events: none; overflow: hidden; }
+.tulip { position: absolute; transform-origin: 50% 100%; animation: tulip-grow .9s cubic-bezier(.3, .7, .4, 1) both; }
+.tulip svg { width: 100%; height: 100%; overflow: visible; }
+.tulip .bloom { display: none; }
+.tulip.open .bud { display: none; }
+.tulip.open .bloom { display: inline; }
+.tulip.open svg { animation: tulip-open .4s ease; }
+@keyframes tulip-grow { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes tulip-open { 0% { transform: scale(.85); } 60% { transform: scale(1.1); } 100% { transform: none; } }
+/* Hayit: crescent hanging under the header; tap → paw prints and the greeting */
+.crescent { position: absolute; top: 100%; right: max(9vw, 120px); width: 46px; height: 80px; padding: 0; border: 0; background: none;
+  cursor: pointer; transform-origin: 50% 0; animation: crescent-swing 4s ease-in-out infinite alternate; }
+.crescent svg { width: 100%; height: 100%; }
+.crescent:focus-visible { outline: 3px solid var(--black); outline-offset: 2px; border-radius: 8px; }
+@keyframes crescent-swing { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@media (max-width: 760px) {
+  body[data-season="newyear"] .header .brand::after { top: -10px; right: -12px; width: 30px; height: 26px; }
+  .crescent { right: 72px; width: 36px; height: 63px; }
+}

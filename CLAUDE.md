@@ -46,6 +46,11 @@ self-hosted Onest font and Leaflet (no CDNs).
   arrives); `/favicon.ico`, `/apple-touch-icon.png`, `/site.webmanifest` served from the site root (`core/views.py`).
 - Deploy: host nginx on the timkon.uz server, `deploy/nginx/zooplaneta.conf` → `/etc/nginx/conf.d/`, included from
   nginx.conf; certbot --nginx adds HTTPS; app on 127.0.0.1:8030.
+- Interactive: «Дай лапу» button (bottom corner, paw prints run across the screen + note linking to Give a Paw),
+  404 with a cat to stroke, Konami code. Seasonal decoration (`core/season.py`, `static/js/season.js`, loaded only
+  while active): periods in SiteSettings (`SeasonPeriod` inline: effect + dates, «каждый год» ignores the year;
+  holiday beats season) — winter/spring/summer/autumn, New Year (garland, hat), Navruz (ornament, tulips),
+  Hayit (stars, crescent; dates one-off, update yearly). Greeting toast once per visit on holidays.
 - `leads/` — JobApplication / PartnerRequest / Feedback, Wagtail ModelViewSets («Заявки», CSV export).
   CVs in `PRIVATE_MEDIA_ROOT`, downloaded only via `/cms/leads/resume/<name>` (needs view perm).
 

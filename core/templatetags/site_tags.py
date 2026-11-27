@@ -143,6 +143,15 @@ def seo_head(context):
     }
 
 
+@register.simple_tag
+def season_now():
+    """Today's seasonal effect and holiday greeting (both "" when none)."""
+    from core.models import SiteSettings
+    s = SiteSettings.load()
+    effect = s.season_active
+    return {"effect": effect, "greeting": s.greeting_for(effect)}
+
+
 @register.inclusion_tag("includes/analytics.html")
 def analytics():
     from django.conf import settings as dj_settings
