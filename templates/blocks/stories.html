@@ -1,0 +1,11 @@
+{% load wagtailimages_tags %}
+{% if value.title %}<div class="block-heading" style="margin-bottom:32px"><h2>{{ value.title }}</h2>{% if value.text %}<p>{{ value.text }}</p>{% endif %}</div>{% endif %}
+<div class="stories reveal-group">
+  {% for s in value.items %}
+  <figure class="story">
+    <div class="story-photo">{% if s.photo %}{% image s.photo fill-240x240 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" with yellow=1 %}{% endif %}</div>
+    <blockquote>{{ s.story }}</blockquote>
+    <figcaption><b>{{ s.name }}</b>{% if s.role %}<span>{{ s.role }}</span>{% endif %}</figcaption>
+  </figure>
+  {% endfor %}
+</div>

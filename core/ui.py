@@ -93,6 +93,9 @@ STRINGS: dict[str, dict[str, str]] = {
     "no_vacancies": {"ru": "Сейчас открытых вакансий нет, но вы можете оставить резюме.",
                      "uz": "Hozir ochiq vakansiyalar yoʻq, lekin rezyume qoldirishingiz mumkin.",
                      "en": "No open positions right now, but you can still send us your CV."},
+    "cv_any": {"ru": "Не нашли подходящую вакансию? Оставьте резюме — предложим, как только откроется место.",
+               "uz": "Mos vakansiya topmadingizmi? Rezyume qoldiring — joy ochilishi bilan taklif qilamiz.",
+               "en": "No matching position? Send your CV and we will contact you when one opens."},
     "apply": {"ru": "Откликнуться", "uz": "Ariza topshirish", "en": "Apply"},
     "send_cv": {"ru": "Отправить резюме", "uz": "Rezyume yuborish", "en": "Send CV"},
     "salary": {"ru": "Зарплата", "uz": "Maosh", "en": "Salary"},
@@ -203,6 +206,7 @@ STRINGS: dict[str, dict[str, str]] = {
     "animal_treatment": {"ru": "На лечении", "uz": "Davolanmoqda", "en": "In treatment"},
     "privacy": {"ru": "Политика конфиденциальности", "uz": "Maxfiylik siyosati", "en": "Privacy policy"},
     "team": {"ru": "Команда", "uz": "Jamoa", "en": "Team"},
+    "store_manager": {"ru": "Управляющий магазином", "uz": "Doʻkon boshqaruvchisi", "en": "Store manager"},
     # delivery / loyalty / call centre
     "delivery": {"ru": "Доставка", "uz": "Yetkazib berish", "en": "Delivery"},
     "order_delivery": {"ru": "Заказать доставку", "uz": "Yetkazib berishga buyurtma", "en": "Order delivery"},

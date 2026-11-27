@@ -388,6 +388,10 @@ class DeliveryLoyaltyTests(TestCase):
         s.save()
 
     def test_pages_without_links_hide_buttons(self):
+        from core.models import SiteSettings
+        s = SiteSettings.load()
+        s.app_store_url = s.google_play_url = s.uds_url = s.uds_code = ""
+        s.save()
         resp = self.client.get("/ru/delivery/")
         self.assertContains(resp, "Express24")
         self.assertNotContains(resp, "app-btn")
@@ -413,3 +417,41 @@ class DeliveryLoyaltyTests(TestCase):
 
     def test_organization_contact_point(self):
         self.assertContains(self.client.get("/ru/"), '"contactType": "customer service"')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class TeamAndSeedTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_demo", verbosity=0)
+
+    def test_leadership_manager_and_staff_stories(self):
+        about = self.client.get("/ru/about/").content.decode()
+        self.assertIn("Руководство", about)
+        self.assertIn("Генеральный директор", about)
+        self.assertIn('class="person-quote"', about)
+        self.assertContains(self.client.get("/ru/stores/store-01/"), "Управляющий магазином")
+        careers = self.client.get("/ru/careers/").content.decode()
+        self.assertIn("Люди Zoo Planeta", careers)
+        self.assertIn("Не нашли подходящую вакансию", careers)  # vacancies exist → no "no vacancies" text
+        self.assertNotIn("Сейчас открытых вакансий нет", careers)
+
+    def test_demo_settings_filled(self):
+        from core.models import SiteSettings
+        s = SiteSettings.load()
+        self.assertTrue(s.has_app and s.uds_url and s.uds_code and s.short_phone and s.privacy_page_id)
+
+    def test_missing_adds_only_absent_sections(self):
+        from django.core.management.base import CommandError
+        from pages.models import DeliveryPage, LoyaltyPage
+        with self.assertRaises(CommandError):
+            call_command("seed_demo", verbosity=0)
+        for p in [*DeliveryPage.objects.all(), *LoyaltyPage.objects.all()]:
+            p.delete()
+        stores_before = StorePage.objects.count()
+        call_command("seed_demo", "--missing", stdout=open("/dev/null", "w"))
+        self.assertEqual(DeliveryPage.objects.count(), 2)  # RU + UZ
+        self.assertEqual(LoyaltyPage.objects.count(), 2)
+        self.assertEqual(StorePage.objects.count(), stores_before)
+        call_command("seed_demo", "--missing", stdout=open("/dev/null", "w"))  # idempotent
+        self.assertEqual(DeliveryPage.objects.count(), 2)

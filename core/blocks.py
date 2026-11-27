@@ -214,6 +214,8 @@ class PersonItem(blocks.StructBlock):
     photo = ImageChooserBlock(label="Фото", required=False)
     name = blocks.CharBlock(label="Имя")
     role = blocks.CharBlock(label="Должность", required=False)
+    quote = blocks.TextBlock(label="Фраза от первого лица", required=False,
+                             help_text="Коротко: за что отвечает, напр. «Отвечаю за то, чтобы…»")
 
 
 class TeamBlock(blocks.StructBlock):
@@ -225,6 +227,24 @@ class TeamBlock(blocks.StructBlock):
         label = "Команда"
         icon = "group"
         template = "blocks/team.html"
+
+
+class StoryItem(blocks.StructBlock):
+    photo = ImageChooserBlock(label="Фото", required=False)
+    name = blocks.CharBlock(label="Имя")
+    role = blocks.CharBlock(label="Должность", required=False)
+    story = blocks.TextBlock(label="История", help_text="2–3 предложения от первого лица")
+
+
+class StoriesBlock(blocks.StructBlock):
+    title = blocks.CharBlock(label="Заголовок", required=False)
+    text = blocks.TextBlock(label="Подзаголовок", required=False)
+    items = blocks.ListBlock(StoryItem(), label="Истории", min_num=1, max_num=6)
+
+    class Meta:
+        label = "Истории сотрудников"
+        icon = "openquote"
+        template = "blocks/stories.html"
 
 
 class StoresMapBlock(blocks.StructBlock):
@@ -269,6 +289,7 @@ def body_blocks():
         ("timeline", TimelineBlock()),
         ("gallery", GalleryBlock()),
         ("team", TeamBlock()),
+        ("stories", StoriesBlock()),
         ("stores_map", StoresMapBlock()),
         ("logos", LogosBlock()),
         ("faq", FAQBlock()),

@@ -17,7 +17,8 @@ self-hosted Onest font and Leaflet (no CDNs).
 - `config/` settings/urls. Languages ru/uz/en via `i18n_patterns` (`/ru/…`), `WAGTAIL_I18N_ENABLED`,
   translations with `wagtail.contrib.simple_translation`. CMS at `ADMIN_URL` (default `cms/`).
 - `core/` — `SiteSettings` (contacts, one set for all languages), StreamField blocks (`blocks.py`),
-  UI strings `ui.py` (`{% t "key" %}`; no gettext), template tags `site_tags.py`, `seed_demo`, `import_stores`,
+  UI strings `ui.py` (`{% t "key" %}`; no gettext), template tags `site_tags.py`, `seed_demo` (covers every page type,
+  block and setting; `--missing` adds absent sections to a live site, `--photos` runs seed_photos), `import_stores`,
   `seed_photos` (sample Unsplash photos in the «Демо-фото (Unsplash)» collection; `--remove` deletes them).
 - `pages/` — Home (fixed section order: hero → intro+stats → categories → promos → about+advantages → stores map →
   news → Give a Paw → brands → extra blocks), Standard, Contact, Promo index/page, News index/page (rubric `kind`,
@@ -28,8 +29,8 @@ self-hosted Onest font and Leaflet (no CDNs).
 - `catalog/` — informational catalogue: CategoryIndexPage/CategoryPage (icon, subcategories, brands) and the `Brand`
   snippet. No products/prices; `code_1c` fields are the hook for a future 1C OData sync.
   `FormPageMixin`: POST → `leads.handling.handle_lead_form` (honeypot, 10/hour per IP, notify) → `?sent=1`.
-- `stores/` — StoreIndexPage (list + map, city/district filters, JSON in page) and StorePage (city, photo gallery
-  `StorePhoto`, JSON-LD PetStore, nearby stores); overview maps (`data-overview-map`) are lazy-initialised in `stores.js`;
+- `stores/` — StoreIndexPage (list + map, city/district filters, JSON in page) and StorePage (city, manager name +
+  photo, photo gallery `StorePhoto`, JSON-LD PetStore, nearby stores); overview maps (`data-overview-map`) are lazy-initialised in `stores.js`;
   `GET /api/stores/<lang>/`.
 - CMS: Wagtail default colours (no recolouring), Zoo Planeta logo via `templates/wagtailadmin/*`, light theme forced
   for everyone (`core/signals.py` + migration, theme choice hidden in `static/css/cms.css`), start page panels in

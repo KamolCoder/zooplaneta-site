@@ -62,6 +62,9 @@ class StorePage(Page):
                               help_text="Если равно открытию — круглосуточно")
     image = models.ForeignKey("wagtailimages.Image", null=True, blank=True, on_delete=models.SET_NULL,
                               related_name="+", verbose_name="Фото магазина")
+    manager_name = models.CharField("Управляющий: имя", max_length=100, blank=True)
+    manager_photo = models.ForeignKey("wagtailimages.Image", null=True, blank=True, on_delete=models.SET_NULL,
+                                      related_name="+", verbose_name="Управляющий: фото")
     features = models.CharField("Что есть в магазине", max_length=255, blank=True,
                                 help_text="Через запятую: Ветаптека, Аквариумы, Парковка")
     description = RichTextField("Описание", blank=True, features=["bold", "italic", "link", "ul"])
@@ -76,6 +79,7 @@ class StorePage(Page):
                         help_text="В Яндекс/Google Картах: правый клик по точке → скопировать координаты"),
         FieldPanel("image"),
         InlinePanel("photos", label="Фото", heading="Галерея магазина"),
+        MultiFieldPanel([FieldPanel("manager_name"), FieldPanel("manager_photo")], "Управляющий магазина"),
         FieldPanel("features"), FieldPanel("description"),
     ]
     parent_page_types = ["stores.StoreIndexPage"]

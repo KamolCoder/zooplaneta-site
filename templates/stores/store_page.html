@@ -27,6 +27,12 @@
       {% if page.metro %}<div class="info-row"><svg class="icon"><use href="#i-metro"/></svg><div><small>{% t "metro" %}</small><b>{{ page.metro }}</b></div></div>{% endif %}
       <div class="info-row"><svg class="icon"><use href="#i-clock"/></svg><div><small>{% t "hours" %}</small><b>{% if page.is_24h %}{% t "open_24" %}{% else %}{% t "daily" %} {{ page.opens|time:"H:i" }}–{{ page.closes|time:"H:i" }}{% endif %}</b></div></div>
       <div class="info-row"><svg class="icon"><use href="#i-phone"/></svg><div><small>{% t "phone" %}</small><b>{{ page.phone|default:settings.core.SiteSettings.phone }}</b></div></div>
+      {% if page.manager_name %}
+      <div class="manager">
+        <span class="manager-photo">{% if page.manager_photo %}{% image page.manager_photo fill-112x112 format-webp alt=page.manager_name %}{% else %}{% include "includes/ph.html" %}{% endif %}</span>
+        <span><small>{% t "store_manager" %}</small><b>{{ page.manager_name }}</b></span>
+      </div>
+      {% endif %}
       <div class="info-actions">
         <a class="btn btn-dark" href="{{ page.route_url }}" target="_blank" rel="noopener"><svg class="icon"><use href="#i-nav"/></svg>{% t "route" %}</a>
         <a class="btn btn-outline" href="tel:{{ page.phone|default:settings.core.SiteSettings.phone|tel }}"><svg class="icon"><use href="#i-phone"/></svg>{% t "call" %}</a>
