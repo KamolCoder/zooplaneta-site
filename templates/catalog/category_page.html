@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+{% block content %}
+<header class="page-head">
+  <div class="container">
+    {% include "includes/crumbs.html" %}
+    <div class="page-head-split">
+      <div>
+        <span class="cat-tile-ic cat-tile-ic-lg">{% if page.icon == "paw" %}<svg viewBox="0 0 100 100" class="icon"><use href="#i-paw"/></svg>{% else %}<svg class="icon"><use href="#i-{{ page.icon }}"/></svg>{% endif %}</span>
+        <h1>{{ page.title }}</h1>
+        {% if page.summary %}<p class="lead">{{ page.summary }}</p>{% endif %}
+        {% find_page "stores.StoreIndexPage" as stores_index %}
+        {% if stores_index %}<a class="btn btn-dark" href="{% pageurl stores_index %}" style="margin-top:28px"><svg class="icon"><use href="#i-pin"/></svg>{% t "find_store" %}</a>{% endif %}
+      </div>
+      <div class="media">{% if page.image %}{% image page.image fill-960x720 format-webp %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+    </div>
+  </div>
+</header>
+{% if page.subcategory_list %}
+<section class="section-sm">
+  <div class="container">
+    <h2 class="h3">{% t "in_category" %}</h2>
+    <div class="subcats reveal-group">{% for sc in page.subcategory_list %}<div><svg class="icon"><use href="#i-check"/></svg>{{ sc }}</div>{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% if page.body %}<section class="section"><div class="container">{% include "includes/body.html" with body=page.body %}</div></section>{% endif %}
+{% with brands=page.brands.all %}{% if brands %}
+<section class="section-sm">
+  <div class="container">
+    <h2 class="h3">{% t "brands" %}</h2>
+    <div class="logos">{% for b in brands %}<div title="{{ b.name }}">{% if b.logo %}{% image b.logo max-240x96 loading="lazy" alt=b.name %}{% else %}{{ b.name }}{% endif %}</div>{% endfor %}</div>
+    <p class="note">{% t "availability_note" %}</p>
+  </div>
+</section>
+{% else %}
+<section class="section-sm"><div class="container"><p class="note">{% t "availability_note" %}</p></div></section>
+{% endif %}{% endwith %}
+{% if siblings %}
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head"><div><h2>{% t "other_categories" %}</h2></div>{% with parent=page.get_parent %}<a class="link-arrow" href="{% pageurl parent %}">{% t "all_categories" %}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endwith %}</div>
+    <div class="cat-tiles">{% for c in siblings %}{% include "catalog/includes/category_tile.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

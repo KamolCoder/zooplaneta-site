@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+{% block content %}
+<section class="section-sm">
+  <div class="container">
+    <div class="article">
+      {% include "includes/crumbs.html" %}
+      <p class="muted"><span class="charity-mark charity-mark-sm"><svg class="icon"><use href="#i-heart"/></svg>{{ page.kind_label }}</span> {{ page.date|human_date }}{% if page.status_label %} · <b>{{ page.status_label }}</b>{% endif %}</p>
+      <h1 style="font-size:clamp(30px,4.4vw,48px);margin:10px 0 18px">{{ page.title }}</h1>
+      {% if page.summary %}<p style="font-size:20px;color:#444;margin-bottom:32px">{{ page.summary }}</p>{% endif %}
+      {% if page.image %}<div class="article-cover">{% image page.image fill-1600x900 format-webp %}</div>{% endif %}
+      {% include "includes/body.html" with body=page.body %}
+      {% with parent=page.get_parent.specific %}
+      <div class="btn-row" style="margin-top:48px">
+        <a class="btn btn-outline" href="{% pageurl parent %}"><svg class="icon"><use href="#i-arrow-left"/></svg>Give a Paw</a>
+        {% if parent.donate_url and parent.donate_text %}<a class="btn btn-yellow" href="{{ parent.donate_url }}" target="_blank" rel="noopener"><svg class="icon"><use href="#i-heart"/></svg>{{ parent.donate_text }}</a>{% endif %}
+      </div>
+      {% endwith %}
+    </div>
+  </div>
+</section>
+{% endblock %}

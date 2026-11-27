@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+{% block content %}
+<header class="page-head charity-head">
+  <div class="container">
+    {% include "includes/crumbs.html" %}
+    <div class="page-head-split">
+      <div>
+        <span class="charity-mark"><svg class="icon"><use href="#i-heart"/></svg>Give a Paw</span>
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}<p class="lead">{{ page.intro }}</p>{% endif %}
+        {% if page.donate_url and page.donate_text %}<a class="btn btn-dark btn-lg" href="{{ page.donate_url }}" target="_blank" rel="noopener" style="margin-top:28px"><svg class="icon"><use href="#i-heart"/></svg>{{ page.donate_text }}</a>{% endif %}
+      </div>
+      <div class="media">{% if page.image %}{% image page.image fill-960x720 format-webp %}{% else %}{% include "includes/ph.html" with yellow=1 %}{% endif %}</div>
+    </div>
+  </div>
+</header>
+{% if page.body %}<section class="section"><div class="container">{% include "includes/body.html" with body=page.body %}</div></section>{% endif %}
+{% if projects %}
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head"><div><h2>{% t "charity_projects" %}</h2></div></div>
+    <div class="grid grid-3 reveal-group">{% for item in projects %}{% include "includes/charity_card.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% if stories %}
+<section class="section">
+  <div class="container">
+    <div class="section-head"><div><h2>{% t "charity_stories" %}</h2></div></div>
+    <div class="grid grid-4 reveal-group">{% for item in stories %}{% include "includes/charity_card.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% if events %}
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head"><div><h2>{% t "charity_events" %}</h2></div></div>
+    <div class="grid grid-3 reveal-group">{% for item in events %}{% include "includes/charity_card.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

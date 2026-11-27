@@ -1,9 +1,10 @@
 {% load static wagtailcore_tags wagtailimages_tags wagtailuserbar site_tags %}<!DOCTYPE html>
-{% lang as cur_lang %}{% home_page as home %}{% find_page "stores.StoreIndexPage" as stores_index %}{% find_page "pages.CareersPage" as careers %}{% find_page "pages.PartnersPage" as partners %}{% find_page "pages.ContactPage" as contact_page %}{% find_page "pages.PromoIndexPage" as promo_index %}{% find_page "pages.NewsIndexPage" as news_index %}
+{% lang as cur_lang %}{% home_page as home %}{% find_page "stores.StoreIndexPage" as stores_index %}{% find_page "pages.CareersPage" as careers %}{% find_page "pages.PartnersPage" as partners %}{% find_page "pages.ContactPage" as contact_page %}{% find_page "pages.PromoIndexPage" as promo_index %}{% find_page "pages.NewsIndexPage" as news_index %}{% find_page "catalog.CategoryIndexPage" as catalog_index %}{% find_page "pages.CharityIndexPage" as charity_index %}
 <html lang="{{ cur_lang }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.classList.add("js")</script>
 {% block seo %}{% seo_head %}{% endblock %}
 <meta name="theme-color" content="#FDCC27">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -58,6 +59,7 @@
     {% for item in items %}<a href="{% pageurl item %}">{{ item.title }}<svg class="icon"><use href="#i-chevron"/></svg></a>{% endfor %}
     {% if stores_index %}<a class="btn btn-dark btn-block" href="{% pageurl stores_index %}"><svg class="icon"><use href="#i-pin"/></svg>{% t "find_store" %}</a>{% endif %}
     <div class="mobile-nav-foot">
+      <div class="mobile-nav-sub">{% if partners and not partners.show_in_menus %}<a href="{% pageurl partners %}">{% t "for_partners" %}</a>{% endif %}{% if careers and not careers.show_in_menus %}<a href="{% pageurl careers %}">{{ careers.title }}</a>{% endif %}</div>
       <a class="topbar-phone" style="color:var(--black);font-size:20px" href="tel:{{ settings.core.SiteSettings.phone_href }}"><svg class="icon"><use href="#i-phone"/></svg>{{ settings.core.SiteSettings.phone }}</a>
       <nav class="lang-switch" aria-label="Language">{% for l in langs %}<a href="{{ l.url }}" lang="{{ l.code }}"{% if l.active %} class="active"{% endif %}>{{ l.label }}</a>{% endfor %}</nav>
     </div>
@@ -87,6 +89,7 @@
         <h4>{% t "for_customers" %}</h4>
         <ul>
           {% if stores_index %}<li><a href="{% pageurl stores_index %}">{{ stores_index.title }}</a></li>{% endif %}
+          {% if catalog_index %}<li><a href="{% pageurl catalog_index %}">{{ catalog_index.title }}</a></li>{% endif %}
           {% if promo_index %}<li><a href="{% pageurl promo_index %}">{{ promo_index.title }}</a></li>{% endif %}
           {% if contact_page %}<li><a href="{% pageurl contact_page %}">{{ contact_page.title }}</a></li>{% endif %}
         </ul>
@@ -96,6 +99,7 @@
         <ul>
           {% for item in items %}{% if item|page_type == "StandardPage" %}<li><a href="{% pageurl item %}">{{ item.title }}</a></li>{% endif %}{% endfor %}
           {% if news_index %}<li><a href="{% pageurl news_index %}">{{ news_index.title }}</a></li>{% endif %}
+          {% if charity_index %}<li><a href="{% pageurl charity_index %}">{{ charity_index.title }}</a></li>{% endif %}
           {% if careers %}<li><a href="{% pageurl careers %}">{{ careers.title }}</a></li>{% endif %}
         </ul>
       </div>
@@ -117,7 +121,7 @@
     </div>
     <div class="footer-bottom">
       <span>© {% now "Y" %} {{ settings.core.SiteSettings.legal_name }}{% if settings.core.SiteSettings.tax_id %} · ИНН {{ settings.core.SiteSettings.tax_id }}{% endif %}. {% t "all_rights" %}</span>
-      <span>zooplaneta.uz</span>
+      {% with pp=settings.core.SiteSettings.privacy_page %}{% if pp and pp.localized.live %}<a href="{% pageurl pp.localized %}">{{ pp.localized.title }}</a>{% else %}<span>zooplaneta.uz</span>{% endif %}{% endwith %}
     </div>
   </div>
 </footer>

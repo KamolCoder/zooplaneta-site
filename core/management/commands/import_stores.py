@@ -3,7 +3,7 @@
     python manage.py import_stores stores.json [--dry-run]
 
 File: [{"id": "...", "name": "...", "address": "...", "lat": "41.3", "lng": "69.2",
-        "opens": "09:00", "closes": "22:00", "phone": "", "district": "", "landmark": ""}, ...]
+        "opens": "09:00", "closes": "22:00", "phone": "", "city": "", "district": "", "landmark": ""}, ...]
 
 Stores are matched by `id` (kept in the slug as store-<first 8 chars>). New stores
 are created in RU and copied to UZ/EN with the same text — translate them in the CMS.
@@ -69,6 +69,7 @@ class Command(BaseCommand):
             page = StorePage.objects.child_of(index).filter(slug=slug).first()
             if page is None:
                 page = StorePage(title=name, slug=slug, locale=ru, district=row.get("district", ""),
+                                 city=row.get("city") or "Ташкент",
                                  landmark=row.get("landmark", ""), **values)
                 if not dry_run:
                     index.add_child(instance=page)

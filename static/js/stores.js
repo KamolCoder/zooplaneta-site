@@ -27,6 +27,34 @@
     L.marker(pos, { icon: pinIcon({}), title: single.dataset.name }).addTo(map);
   }
 
+  // overview maps (home page, "stores map" block): every store as a pin, created when scrolled into view
+  document.querySelectorAll("[data-overview-map]").forEach((el) => {
+    const stores = JSON.parse(document.getElementById(el.dataset.src).textContent);
+    const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const init = () => {
+      if (!window.L || el.dataset.ready) return;
+      el.dataset.ready = "1";
+      const map = baseMap(el);
+      const pts = [];
+      stores.forEach((s) => {
+        if (s.lat == null || s.lng == null) return;
+        L.marker([s.lat, s.lng], { icon: pinIcon({}), title: s.name, keyboard: true })
+          .bindPopup(`<b>${esc(s.name)}</b>${esc(s.address)}<br><a href="${esc(s.url)}">${esc(el.dataset.more)}</a> · <a href="${esc(s.route)}" target="_blank" rel="noopener">${esc(el.dataset.route)}</a>`)
+          .addTo(map);
+        pts.push([s.lat, s.lng]);
+      });
+      if (pts.length > 1) map.fitBounds(pts, { padding: [32, 32] });
+    };
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver((entries) => {
+        if (entries.some((e) => e.isIntersecting)) { io.disconnect(); init(); }
+      }, { rootMargin: "300px" });
+      io.observe(el);
+    } else {
+      init();
+    }
+  });
+
   // finder
   const root = document.querySelector("[data-store-finder]");
   if (!root) return;
@@ -35,6 +63,7 @@
   const items = new Map([...root.querySelectorAll(".store-item")].map((el) => [+el.dataset.id, el]));
   const qInput = root.querySelector("[data-q]");
   const districtSel = root.querySelector("[data-district]");
+  const citySel = root.querySelector("[data-city]");
   const openBtn = root.querySelector("[data-open]");
   const nearBtn = root.querySelector("[data-near]");
   const layout = root.querySelector(".store-layout");
@@ -108,14 +137,15 @@
   function apply() {
     const q = norm(qInput.value.trim());
     const district = districtSel ? districtSel.value : "";
+    const city = citySel ? citySel.value : "";
     const order = [...STORES];
     if (userPos) order.sort((a, b) => (a.km ?? 1e9) - (b.km ?? 1e9));
     let shown = 0;
     order.forEach((s) => {
       const el = items.get(s.id);
       if (!el) return;
-      const hay = norm([s.name, s.address, s.landmark, s.district, s.metro].join(" "));
-      const ok = (!q || hay.includes(q)) && (!district || s.district === district) && (!onlyOpen || s.open);
+      const hay = norm([s.name, s.address, s.landmark, s.city, s.district, s.metro].join(" "));
+      const ok = (!q || hay.includes(q)) && (!city || s.city === city) && (!district || s.district === district) && (!onlyOpen || s.open);
       el.hidden = !ok;
       if (ok) shown++;
       list.insertBefore(el, emptyEl);
@@ -148,6 +178,7 @@
   items.forEach((el, id) => el.addEventListener("click", (e) => { if (!e.target.closest("a")) select(id, true); }));
   qInput.addEventListener("input", apply);
   districtSel?.addEventListener("change", apply);
+  citySel?.addEventListener("change", apply);
   openBtn.addEventListener("click", () => { onlyOpen = !onlyOpen; openBtn.setAttribute("aria-pressed", String(onlyOpen)); apply(); });
   nearBtn.addEventListener("click", locate);
   root.querySelectorAll(".view-tabs button").forEach((b) => b.addEventListener("click", () => {

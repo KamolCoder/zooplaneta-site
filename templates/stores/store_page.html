@@ -13,6 +13,9 @@
   <div class="container store">
     <div>
       <div class="store-media">{% if page.image %}{% image page.image fill-1280x800 format-webp %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+      {% with photos=page.photos.all %}{% if photos %}
+      <div class="store-photos" aria-label="{% t 'photos' %}">{% for p in photos %}<figure>{% image p.image fill-480x360 format-webp loading="lazy" alt=p.caption|default:page.title %}{% if p.caption %}<figcaption>{{ p.caption }}</figcaption>{% endif %}</figure>{% endfor %}</div>
+      {% endif %}{% endwith %}
       {% if page.feature_list %}<h2 class="h2" style="font-size:24px;margin:40px 0 16px">{% t "in_store" %}</h2><div class="chips">{% for f in page.feature_list %}<span>{{ f }}</span>{% endfor %}</div>{% endif %}
       {% if page.description %}<div class="prose" style="margin-top:32px">{{ page.description|richtext }}</div>{% endif %}
       {% if page.has_coords %}<div class="store-map" id="store-map" data-lat="{{ page.latitude|stringformat:'f' }}" data-lng="{{ page.longitude|stringformat:'f' }}" data-name="{{ page.title }}"></div>{% endif %}

@@ -5,7 +5,7 @@
   <div class="container">
     <div class="article">
       {% include "includes/crumbs.html" %}
-      <p class="muted">{{ page.date|human_date }}</p>
+      <p class="muted">{{ page.date|human_date }}{% if page.kind != "news" %} · {{ page.kind_label }}{% endif %}</p>
       <h1 style="font-size:clamp(30px,4.4vw,48px);margin:10px 0 18px">{{ page.title }}</h1>
       {% if page.summary %}<p style="font-size:20px;color:#444;margin-bottom:32px">{{ page.summary }}</p>{% endif %}
       {% if page.image %}<div class="article-cover">{% image page.image fill-1600x900 format-webp %}</div>{% endif %}

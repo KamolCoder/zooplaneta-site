@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+{% block content %}
+{% include "includes/page_head.html" %}
+<section class="section" style="padding-top:8px">
+  <div class="container">
+    <div class="cat-cards reveal-group">
+      {% for c in categories %}
+      <a class="cat-card" href="{% pageurl c %}">
+        <div class="cat-card-media">{% if c.image %}{% image c.image fill-720x540 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" %}{% endif %}<span class="cat-tile-ic">{% if c.icon == "paw" %}<svg viewBox="0 0 100 100" class="icon"><use href="#i-paw"/></svg>{% else %}<svg class="icon"><use href="#i-{{ c.icon }}"/></svg>{% endif %}</span></div>
+        <div class="cat-card-body">
+          <h2>{{ c.title }}</h2>
+          {% if c.summary %}<p>{{ c.summary }}</p>{% endif %}
+          {% if c.subcategory_list %}<div class="chips chips-sm">{% for sc in c.subcategory_list|slice:":4" %}<span>{{ sc }}</span>{% endfor %}</div>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    <p class="note">{% if page.note %}{{ page.note }}{% else %}{% t "availability_note" %}{% endif %}</p>
+  </div>
+</section>
+{% endblock %}

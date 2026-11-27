@@ -13,6 +13,7 @@
   <div class="container" data-store-finder>
     <div class="store-tools">
       <label class="field-search"><svg class="icon"><use href="#i-search"/></svg><span class="sr-only">{% t "search" %}</span><input type="search" data-q value="{{ query }}" placeholder="{% t 'search_placeholder' %}" autocomplete="off"></label>
+      {% if cities|length > 1 %}<select class="select" data-city aria-label="{% t 'city' %}"><option value="">{% t "all_cities" %}</option>{% for c in cities %}<option>{{ c }}</option>{% endfor %}</select>{% endif %}
       {% if districts|length > 1 %}<select class="select" data-district aria-label="{% t 'district' %}"><option value="">{% t "all_districts" %}</option>{% for d in districts %}<option>{{ d }}</option>{% endfor %}</select>{% endif %}
       <button class="toggle" type="button" data-open aria-pressed="false"><svg class="icon"><use href="#i-clock"/></svg>{% t "open_now" %}</button>
       <button class="toggle" type="button" data-near aria-pressed="false"><svg class="icon"><use href="#i-nav"/></svg>{% t "near_me" %}</button>

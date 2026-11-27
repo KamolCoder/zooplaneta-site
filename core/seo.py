@@ -133,9 +133,25 @@ def _job_posting(page) -> dict:
     return {k: v for k, v in data.items() if v}
 
 
+def _article(page) -> dict:
+    data = {
+        "@type": "NewsArticle" if page.kind in ("news", "opening", "event") else "Article",
+        "headline": page.title[:110],
+        "description": page.summary or None,
+        "datePublished": page.date.isoformat(),
+        "dateModified": (page.last_published_at.date().isoformat() if page.last_published_at else None),
+        "inLanguage": current_lang(),
+        "mainEntityOfPage": page.full_url,
+        "image": og_image(page),
+        "author": {"@id": site_url() + "/#organization"},
+        "publisher": {"@id": site_url() + "/#organization"},
+    }
+    return {k: v for k, v in data.items() if v}
+
+
 def structured_data(page) -> str:
     """One <script type="application/ld+json"> payload (@graph) for the page, or ''."""
-    from pages.models import HomePage, VacancyPage
+    from pages.models import CharityPage, HomePage, NewsPage, VacancyPage
     from stores.models import StorePage
     if page is None:
         return ""
@@ -148,6 +164,9 @@ def structured_data(page) -> str:
         graph.append(page.structured_data())
     elif isinstance(page, VacancyPage) and page.is_open:
         graph.append(_job_posting(page))
+    elif isinstance(page, (NewsPage, CharityPage)):
+        graph.append(_article(page))
+        graph.append(_organization())
     if crumbs := _breadcrumbs(page):
         graph.append(crumbs)
     if not graph:
