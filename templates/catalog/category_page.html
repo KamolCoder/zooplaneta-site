@@ -12,7 +12,7 @@
         {% find_page "stores.StoreIndexPage" as stores_index %}
         {% if stores_index %}<a class="btn btn-dark" href="{% pageurl stores_index %}" style="margin-top:28px"><svg class="icon"><use href="#i-pin"/></svg>{% t "find_store" %}</a>{% endif %}
       </div>
-      <div class="media">{% if page.image %}{% image page.image fill-960x720 format-webp %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+      <div class="media">{% if page.image %}{% srcset_image page.image fill-{720x540,1200x900} format-webp sizes="(max-width: 900px) 100vw, 45vw" %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
     </div>
   </div>
 </header>

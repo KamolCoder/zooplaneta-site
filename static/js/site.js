@@ -47,6 +47,16 @@
     } catch (e) { /* clipboard blocked: the code is visible anyway */ }
   }));
 
+  // home: transparent header over the hero until the page scrolls
+  if (document.body.classList.contains("home-hero")) {
+    const first = document.querySelector(".hero .slide");
+    document.body.dataset.heroTone = first ? first.dataset.tone || "light" : "light";
+    const header = document.querySelector(".header");
+    const onScroll = () => header?.classList.toggle("is-scrolled", window.scrollY > 40);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
   // hero slider
   document.querySelectorAll("[data-slider]").forEach((root) => {
     const slides = [...root.querySelectorAll(".slide")];
@@ -58,8 +68,8 @@
       i = (n + slides.length) % slides.length;
       slides.forEach((s, k) => { s.classList.toggle("is-active", k === i); s.setAttribute("aria-hidden", String(k !== i)); });
       dots.forEach((d, k) => d.classList.toggle("is-active", k === i));
-      // dots/arrows take the colour of the current slide's text
-      root.querySelector(".slider-ui").style.color = getComputedStyle(slides[i]).color;
+      // the header over the hero takes the text colour of the current slide
+      if (root.closest(".hero")) document.body.dataset.heroTone = slides[i].dataset.tone || "light";
     };
     const play = () => { if (!reduced) { stop(); timer = setInterval(() => go(i + 1), 7000); } };
     const stop = () => { if (timer) clearInterval(timer); timer = null; };

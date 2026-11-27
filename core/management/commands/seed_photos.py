@@ -18,12 +18,14 @@ from wagtail.images import get_image_model
 from wagtail.models import Collection, Page
 
 COLLECTION = "Демо-фото (Unsplash)"
-URL = "https://images.unsplash.com/photo-{id}?w=1600&q=78&fm=jpg&fit=max"
+URL = "https://images.unsplash.com/photo-{id}?w=2400&q=78&fm=jpg&fit=max"
 
 # key -> (Unsplash photo id, title)
 PHOTOS = {
     "hero": ("1583512603805-3cc6b41f3edb", "щенок на жёлтом фоне"),
-    "hero_delivery": ("1530281700549-e82e7bf110d6", "собака бежит к хозяину"),
+    "hero_delivery": ("1583337130417-3346a1be7dee", "бульдог на голубом фоне"),
+    "hero_uds": ("1537151625747-768eb6cf92b2", "корги на оранжевом фоне"),
+    "hero_promo": ("1574158622682-e40e69881006", "кот на синем фоне"),
     "delivery": ("1605568427561-40dd23c2acea", "хаски"),
     "loyalty": ("1548681528-6a5c45b66b42", "кот"),
     "hero_cat": ("1514888286974-6c03e2ca1dba", "кошка"),
@@ -180,9 +182,9 @@ class Command(BaseCommand):
 
         # home: slides, about photo
         from pages.models import HomePage
-        slide_keys = {"ru": ["hero", "hero_delivery", "hero_cat", "hero_team"],
-                      "uz": ["hero", "hero_delivery", "hero_cat", "hero_team"],
-                      "en": ["hero", "hero_partners"]}
+        slide_keys = {"ru": ["hero", "hero_delivery", "hero_uds", "hero_promo"],
+                      "uz": ["hero", "hero_delivery", "hero_uds", "hero_promo"],
+                      "en": ["hero", "hero_uds"]}
         for home in HomePage.objects.all():
             keys = slide_keys.get(home.locale.language_code, slide_keys["ru"])
             raw = list(home.slides.raw_data)

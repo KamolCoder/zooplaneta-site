@@ -20,8 +20,11 @@ self-hosted Onest font and Leaflet (no CDNs).
   UI strings `ui.py` (`{% t "key" %}`; no gettext), template tags `site_tags.py`, `seed_demo` (covers every page type,
   block and setting; `--missing` adds absent sections to a live site, `--photos` runs seed_photos), `import_stores`,
   `seed_photos` (sample Unsplash photos in the «Демо-фото (Unsplash)» collection; `--remove` deletes them).
-- `pages/` — Home (fixed section order: hero → intro+stats → categories → promos → about+advantages → stores map →
-  news → Give a Paw → brands → extra blocks), Standard, Contact, Promo index/page, News index/page (rubric `kind`,
+- `pages/` — Home (fixed section order: hero → deals of the week (promo price tags) → quick links → intro+stats →
+  categories → about+advantages → stores map → delivery/UDS → news → Give a Paw → brands → extra blocks). Hero slides
+  (`HeroSlideBlock`): «Конструктор» = background colour (own HEX > photo edge colour via `{% slide_look %}` > theme),
+  photo to the edge or cut-out PNG, headline, up to 3 perks; or «Готовый баннер» = desktop + mobile images. On the home
+  page the header lies transparent over the hero (`body.home-hero`, `data-hero-tone`) until the page scrolls; Standard, Contact, Promo index/page, News index/page (rubric `kind`,
   `?kind=` filter, NewsArticle JSON-LD), Careers/Vacancy, Partners, CharityIndex/CharityPage (Give a Paw: project /
   event / animal story, RU+UZ), DeliveryPage (own app + aggregators StreamField) and LoyaltyPage (UDS), RU+UZ.
   App Store / Google Play / UDS link + code / short call-centre number live in SiteSettings; `{% qr url %}` (segno)
@@ -49,7 +52,7 @@ self-hosted Onest font and Leaflet (no CDNs).
 ## Design
 Brand from the logo: yellow `#FDCC27`, black `#111`, white / `#F6F5F1`. Onest. Yellow is a surface colour
 (banners, badges, CTA) — never yellow text on white. No gradients/blobs/emoji/eyebrow labels; restrained grid,
-14/22 px radii, line icons from `templates/includes/icons.html`, paw placeholder `includes/ph.html` until photos.
+container 1440 px (32/16 px side padding); photos bleed to the screen edge (full-width hero on the slide colour, page-head photo on the right 45%, about photo / stores map / gallery / delivery cards via `--edge`); 14/22 px radii, line icons from `templates/includes/icons.html`, paw placeholder `includes/ph.html` until photos.
 Motion: `.reveal` / `.reveal-group` fade-in on scroll (only under `html.js`, off with reduced motion).
 Name is «Zoo Planeta» (Latin) in every language.
 
