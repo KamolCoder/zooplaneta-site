@@ -530,10 +530,20 @@ class InteractiveTests(TestCase):
         self.assertNotIn("data-nf-scene", html)
         self.assertIn("Страница не найдена", html)
 
-    def test_paws_flag(self):
-        self.assertIn("data-paws", self.client.get("/ru/").content.decode())
+    def test_paw_button(self):
+        from pages.models import CharityIndexPage
+        charity = CharityIndexPage.objects.get(locale__language_code="ru")
+        ru = self.client.get("/ru/").content.decode()
+        self.assertIn("data-paw-fab", ru)
+        self.assertIn("Дай лапу", ru)
+        self.assertIn(f'href="{charity.url}">Помогите и приютам', ru)   # toast links to Give a Paw
+        en = self.client.get("/en/").content.decode()
+        self.assertIn("Give a paw", en)
+        self.assertNotIn("Help shelters too", en)                        # no Give a Paw in English
         self._settings(easter_paws=False)
-        self.assertNotIn("data-paws", self.client.get("/ru/").content.decode())
+        ru = self.client.get("/ru/").content.decode()
+        self.assertNotIn("data-paw-fab", ru)
+        self.assertNotIn("data-paws", ru)
 
     def test_season_dates(self):
         import datetime

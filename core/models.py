@@ -45,8 +45,9 @@ class SiteSettings(BaseGenericSetting):
     office_lat = models.DecimalField("Офис: широта", max_digits=9, decimal_places=6, null=True, blank=True)
     office_lng = models.DecimalField("Офис: долгота", max_digits=9, decimal_places=6, null=True, blank=True)
 
-    easter_paws = models.BooleanField("Пасхалка «следы лап»", default=True,
-                                      help_text="5 кликов по логотипу на главной (или код Konami) — по экрану пробегают следы")
+    easter_paws = models.BooleanField("Кнопка «Дай лапу»", default=True,
+                                      help_text="Жёлтая кнопка с лапой в углу экрана: по клику бегут следы лап "
+                                                "и появляется ссылка на раздел Give a Paw")
     fun_404 = models.BooleanField("Интерактивная страница 404", default=True,
                                   help_text="Кот, которого можно погладить; выключено — обычная страница «не найдено»")
     SEASON_CHOICES = [("", "Нет"), ("snow", "Снег")]

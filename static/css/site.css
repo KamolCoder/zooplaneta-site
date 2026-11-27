@@ -881,7 +881,39 @@ a.aggregator:hover { border-color: var(--black); box-shadow: var(--shadow); }
   .nf-art { max-width: 520px; }
 }
 
-/* ── easter egg: paw prints run across the screen ─────────────────────────── */
+/* ── "Give a paw" button: paw prints run across the screen ────────────────── */
+.paw-fab { position: fixed; right: 24px; bottom: 24px; z-index: 58; display: flex; align-items: center; gap: 12px; }
+.paw-fab-btn { width: 58px; height: 58px; border: 0; border-radius: 50%; background: var(--yellow); color: var(--black); cursor: pointer;
+  display: grid; place-items: center; box-shadow: 0 0 0 1px rgba(17,17,17,.08), 0 10px 24px -8px rgba(17,17,17,.35); transition: transform .2s ease; }
+.paw-fab-btn svg { width: 28px; height: 28px; animation: paw-idle 14s ease-in-out 8s infinite; }
+.paw-fab-btn .icon-fill { fill: currentColor; }
+.paw-fab-btn:hover { transform: scale(1.07) rotate(-10deg); }
+.paw-fab-btn:focus-visible { outline: 3px solid var(--black); outline-offset: 3px; }
+.paw-fab-btn.is-wave svg { animation: paw-wave 1s ease-in-out 2; }
+.paw-fab-btn.is-give { animation: paw-give .45s ease; }
+.paw-fab-tip { position: relative; background: var(--black); color: #fff; font-weight: 700; font-size: 15px; padding: 9px 14px;
+  border-radius: 10px; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateX(8px); transition: opacity .25s, transform .25s; }
+.paw-fab-tip::after { content: ""; position: absolute; right: -5px; top: 50%; width: 10px; height: 10px; margin-top: -5px;
+  background: var(--black); transform: rotate(45deg); }
+.paw-fab.show-tip .paw-fab-tip { opacity: 1; transform: none; }
+@media (hover: hover) { .paw-fab:hover .paw-fab-tip { opacity: 1; transform: none; } }
+.paw-toast { position: fixed; left: 50%; bottom: 28px; z-index: 58; display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 4px 14px; max-width: calc(100vw - 32px); padding: 13px 20px; border-radius: var(--radius); background: var(--black); color: #fff;
+  font-weight: 600; box-shadow: 0 10px 30px -10px rgba(17,17,17,.5); opacity: 0; transform: translate(-50%, 16px);
+  transition: opacity .25s, transform .25s; }
+.paw-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+.paw-toast a { display: inline-flex; align-items: center; gap: 6px; color: var(--yellow); font-weight: 700; white-space: nowrap; }
+.paw-toast a:hover { text-decoration: underline; }
+.paw-toast .icon { width: 18px; height: 18px; }
+@keyframes paw-idle { 0%, 92%, 100% { transform: none; } 94% { transform: rotate(-16deg); } 96% { transform: rotate(12deg); } 98% { transform: rotate(-6deg); } }
+@keyframes paw-wave { 0%, 100% { transform: none; } 25% { transform: rotate(-22deg); } 75% { transform: rotate(18deg); } }
+@keyframes paw-give { 0% { transform: none; } 40% { transform: translateY(-8px) scale(1.12) rotate(-14deg); } 100% { transform: none; } }
+@media (max-width: 760px) {
+  .paw-fab { right: 14px; bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .paw-fab-btn { width: 52px; height: 52px; }
+  .paw-toast { bottom: calc(142px + env(safe-area-inset-bottom)); }
+}
+
 .paw-trail { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
 .paw-step { position: absolute; color: var(--black); opacity: 0; animation: paw-step 1.5s ease forwards; }
 .paw-step svg { width: 100%; height: 100%; }

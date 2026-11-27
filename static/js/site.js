@@ -59,11 +59,11 @@
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // easter egg: 5 clicks on the logo while on the home page (or the Konami code) send paw prints across the screen
-  if (document.body.hasAttribute("data-paws") && !reducedMotion) {
+  // "Give a paw" button: paw prints run across the screen, then a note links to the Give a Paw section
+  if (document.body.hasAttribute("data-paws")) {
     let running = false;
     const runPaws = () => {
-      if (running) return;
+      if (running || reducedMotion) return;
       running = true;
       const w = window.innerWidth, h = window.innerHeight;
       const size = w < 640 ? 22 : 30;          // print size, px
@@ -93,18 +93,39 @@
       setTimeout(() => { trail.remove(); running = false; }, steps * 110 + 1600);
     };
 
-    // on the home page the logo only scrolls up, so clicks can be counted without breaking navigation
-    const brand = document.querySelector(".header .brand");
-    let clicks = [];
-    brand?.addEventListener("click", (e) => {
-      if (brand.href.split("#")[0] !== location.href.split("#")[0]) return;
-      e.preventDefault();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      const now = Date.now();
-      clicks = clicks.filter((c) => now - c < 2000).concat(now);
-      if (clicks.length >= 5) { clicks = []; runPaws(); }
-    });
+    const fab = document.querySelector("[data-paw-fab]");
+    const toast = document.querySelector("[data-paw-toast]");
+    if (fab) {
+      const btn = fab.querySelector("button");
+      // first page of the visit: the paw waves once and says what it wants
+      let greeted = false;
+      try { greeted = !!sessionStorage.getItem("zp-paw-hi"); sessionStorage.setItem("zp-paw-hi", "1"); } catch (e) { /* private mode */ }
+      if (!greeted) {
+        setTimeout(() => {
+          btn.classList.add("is-wave");
+          fab.classList.add("show-tip");
+          setTimeout(() => { fab.classList.remove("show-tip"); btn.classList.remove("is-wave"); }, 4000);
+        }, 3000);
+      }
+      let toastTimer = null;
+      btn.addEventListener("click", () => {
+        fab.classList.remove("show-tip");
+        btn.classList.remove("is-give");
+        void btn.offsetWidth;                  // restart the "give" animation
+        btn.classList.add("is-give");
+        runPaws();
+        if (!toast) return;
+        toast.hidden = false;
+        requestAnimationFrame(() => toast.classList.add("is-on"));
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.remove("is-on");
+          setTimeout(() => { if (!toast.classList.contains("is-on")) toast.hidden = true; }, 300);
+        }, 6000);
+      });
+    }
 
+    // hidden bonus: the Konami code
     const konami = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
     let pos = 0;
     document.addEventListener("keydown", (e) => {
