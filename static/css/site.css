@@ -915,15 +915,9 @@ a.aggregator:hover { border-color: var(--black); box-shadow: var(--shadow); }
 }
 
 .paw-trail { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
-.paw-step { position: absolute; color: var(--black); opacity: 0; animation: paw-step 1.5s ease forwards; }
+.paw-step { position: absolute; color: var(--black); opacity: 0; }  /* animated from site.js */
 .paw-step svg { width: 100%; height: 100%; }
 .paw-step .icon-fill { fill: currentColor; }
-@keyframes paw-step {
-  0% { opacity: 0; scale: .6; }
-  12% { opacity: .9; scale: 1; }
-  65% { opacity: .9; }
-  100% { opacity: 0; }
-}
 
 /* ── seasonal effect (season.js): snow over the top of every page ─────────── */
 .season-canvas { position: absolute; top: 0; left: 0; width: 100%; z-index: 55; pointer-events: none; }
