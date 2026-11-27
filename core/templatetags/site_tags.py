@@ -161,3 +161,50 @@ def qr(url, scale=4):
 def _qr_svg(url: str, scale: int) -> str:
     import segno
     return segno.make(url, error="m").svg_inline(scale=scale, dark="#111", border=2, omitsize=False)
+
+
+THEME_COLORS = {"yellow": "#FDCC27", "dark": "#111111", "light": "#F6F5F1"}
+
+
+def _luminance(hex_color: str) -> float:
+    r, g, b = (int(hex_color[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def edge_color(image) -> str | None:
+    """Median colour of the photo's left edge, so the slide background continues the photo. Cached."""
+    import re
+    from statistics import median
+    from django.core.cache import cache
+    key = f"edge-color:{image.pk}:{image.file_hash or image.file.name}"
+    found = cache.get(key)
+    if found:
+        return found
+    try:
+        from PIL import Image as PILImage
+        rendition = image.get_rendition("max-200x200")
+        with rendition.file.open("rb") as fh:
+            img = PILImage.open(fh).convert("RGB")
+        w, h = img.size
+        px = [img.getpixel((x, y)) for x in range(min(4, w)) for y in range(h)]
+        color = "#%02X%02X%02X" % tuple(int(median(c[i] for c in px)) for i in range(3))
+    except Exception:  # missing file, odd format: fall back to the theme colour
+        return None
+    if re.fullmatch(r"#[0-9A-F]{6}", color):
+        cache.set(key, color, 60 * 60 * 24 * 30)
+    return color
+
+
+@register.simple_tag
+def slide_look(value):
+    """{bg, tone} for a hero slide: own colour > photo edge colour > theme colour; tone = text colour."""
+    import re
+    bg = (value.get("bg_color") or "").strip().upper()
+    if not re.fullmatch(r"#[0-9A-F]{6}", bg):
+        bg = ""
+    if not bg and value.get("kind") == "banner" and value.get("banner"):
+        bg = edge_color(value["banner"]) or ""
+    if not bg and value.get("auto_bg") and value.get("image") and value.get("image_style") != "object":
+        bg = edge_color(value["image"]) or ""
+    bg = bg or THEME_COLORS.get(value.get("theme"), THEME_COLORS["yellow"])
+    return {"bg": bg, "tone": "dark" if _luminance(bg) < 0.55 else "light"}

@@ -37,6 +37,7 @@ STRINGS: dict[str, dict[str, str]] = {
     "quick_careers": {"ru": "Вакансии в магазинах", "uz": "Doʻkonlardagi vakansiyalar", "en": "Jobs in our stores"},
     "quick_partners": {"ru": "Поставщикам и арендодателям", "uz": "Yetkazib beruvchi va ijaraga beruvchilarga",
                        "en": "Suppliers, brands, landlords"},
+    "deals_title": {"ru": "Выгодно на этой неделе", "uz": "Shu haftaning foydali takliflari", "en": "This week's deals"},
     "current_promos": {"ru": "Акции", "uz": "Aksiyalar", "en": "Offers"},
     "all_promos": {"ru": "Все акции", "uz": "Barcha aksiyalar", "en": "All offers"},
     "news": {"ru": "Новости", "uz": "Yangiliklar", "en": "News"},

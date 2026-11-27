@@ -226,7 +226,7 @@ class Command(BaseCommand):
         self.build_news(home)
         self.build_charity(home)
         delivery = self.build_delivery(home)
-        self.build_loyalty(home)
+        loyalty = self.build_loyalty(home)
         careers = self.build_careers(home)
         partners = self.build_partners(home)
         self.build_contacts(home)
@@ -234,7 +234,7 @@ class Command(BaseCommand):
         settings = SiteSettings.load()
         settings.privacy_page = privacy
         settings.save()
-        self.fill_home(home, about, stores, promos, careers, partners, delivery)
+        self.fill_home(home, about, stores, promos, careers, partners, delivery, loyalty)
 
     def add_missing(self):
         """Create the sections a live site does not have yet (new features), in RU (+UZ/EN where they exist)."""
@@ -422,14 +422,15 @@ class Command(BaseCommand):
         today = timezone.localdate()
         promos = [
             (("Сухие корма для кошек", "Mushuklar uchun quruq yem"), "−20%", 0, 14,
-             ("Скидка на сухие корма популярных брендов.", "Mashhur brendlarning quruq yemlariga chegirma."), "", ""),
+             ("Скидка на сухие корма популярных брендов.", "Mashhur brendlarning quruq yemlariga chegirma."),
+             "185 000 сум", "148 000 сум"),
             (("Наполнители 1+1", "Toʻldirgichlar 1+1"), "1+1", -3, 10,
              ("Второй пакет наполнителя в подарок.", "Ikkinchi qop toʻldirgich sovgʻa."), "", ""),
             (("Лакомства для собак", "Itlar uchun shirinliklar"), "−15%", -1, 20,
              ("Жевательные лакомства и снеки со скидкой.", "Chaynaladigan shirinliklar va sneklar chegirmada."),
              "48 000 сум", "40 800 сум"),
             (("Всё для аквариума", "Akvarium uchun hammasi"), "−10%", -5, 25,
-             ("Фильтры, грунт и корма для рыб.", "Filtrlar, grunt va baliq yemlari."), "", ""),
+             ("Фильтры, грунт и корма для рыб.", "Filtrlar, grunt va baliq yemlari."), "320 000 сум", "288 000 сум"),
             (("Средства от блох и клещей", "Burga va kanaga qarshi vositalar"), "−25%", 7, 30,
              ("Подготовьте питомца к весне.", "Uy hayvoningizni bahorga tayyorlang."), "", ""),
             (("Новогодние подарки", "Yangi yil sovgʻalari"), "−30%", -60, -30,
@@ -716,46 +717,53 @@ class Command(BaseCommand):
                         title=("Политика конфиденциальности", "Maxfiylik siyosati", "Privacy policy"),
                         intro=("", "", ""), body=tuple([{"type": "text", "value": rt(t)}] for t in text))
 
-    def fill_home(self, home, about, stores, promos, careers, partners, delivery):
+    def fill_home(self, home, about, stores, promos, careers, partners, delivery, loyalty):
+        def slide(title, text, link_text, page, theme, perks):
+            return {"type": "slide", "value": {
+                "kind": "build", "title": title, "text": text, "image": None, "image_style": "photo",
+                "theme": theme, "auto_bg": True, "bg_color": "", "banner": None, "banner_mobile": None,
+                "perks": [{"value": v, "label": lbl} for v, lbl in perks],
+                "link": {"text": link_text, "page": page.get_translation(self.loc[code]).pk, "url": ""}}}
+
         def slides(i, code):
-            items = [
-                {"type": "slide", "value": {
-                    "title": ("Всё для питомцев — рядом с домом", "Uy hayvonlari uchun hammasi — uyingiz yonida",
-                              "Everything for pets, close to home")[i],
-                    "text": (f"{len(STORES)} магазинов Zoo Planeta в Ташкенте. Корма, наполнители, аксессуары и ветаптека.",
-                             f"Toshkentda {len(STORES)} ta Zoo Planeta doʻkoni. Yem, toʻldirgich, aksessuarlar va vetapteka.",
-                             f"{len(STORES)} Zoo Planeta stores in Tashkent: pet food, litter, accessories and vet care.")[i],
-                    "image": None, "theme": "yellow",
-                    "link": {"text": ("Найти магазин", "Doʻkon topish", "Find a store")[i],
-                             "page": stores.get_translation(self.loc[code]).pk, "url": ""}}},
-            ]
+            n, d = str(len(STORES)), str(len(DISTRICTS))
+            items = [slide(
+                ("Всё для питомцев — рядом с домом", "Uy hayvonlari uchun hammasi — uyingiz yonida",
+                 "Everything for pets, close to home")[i],
+                ("Корма, наполнители, аксессуары и ветаптека в каждом районе Ташкента.",
+                 "Toshkentning har bir tumanida yem, toʻldirgich, aksessuarlar va vetapteka.",
+                 "Pet food, litter, accessories and vet care in every district of Tashkent.")[i],
+                ("Найти магазин", "Doʻkon topish", "Find a store")[i], stores, "yellow",
+                [(n, ("магазинов в Ташкенте", "ta doʻkon Toshkentda", "stores in Tashkent")[i]),
+                 (d, ("районов города", "ta shahar tumani", "city districts")[i]),
+                 ("7/7", ("без выходных", "dam olish kunlarisiz", "open every day")[i])])]
             if code != "en":
-                items.append({"type": "slide", "value": {
-                    "title": ("Доставка корма домой", "Yemni uyga yetkazib beramiz")[i],
-                    "text": ("Закажите в приложении Zoo Planeta или в сервисах доставки.",
-                             "Zoo Planeta ilovasida yoki yetkazib berish xizmatlarida buyurtma bering.")[i],
-                    "image": None, "theme": "light",
-                    "link": {"text": ("Заказать доставку", "Buyurtma berish")[i],
-                             "page": delivery.get_translation(self.loc[code]).pk, "url": ""}}})
-                items.append({"type": "slide", "value": {
-                    "title": ("−20% на сухие корма для кошек", "Mushuklar uchun quruq yemga −20%")[i],
-                    "text": ("Две недели во всех магазинах сети.", "Ikki hafta davomida barcha doʻkonlarda.")[i],
-                    "image": None, "theme": "dark",
-                    "link": {"text": ("Все акции", "Barcha aksiyalar")[i],
-                             "page": promos.get_translation(self.loc[code]).pk, "url": ""}}})
-                items.append({"type": "slide", "value": {
-                    "title": ("Ищем продавцов-консультантов", "Sotuvchi-maslahatchilar kerak")[i],
-                    "text": ("Работа рядом с домом, обучение и стабильная зарплата.",
-                             "Uy yonida ish, oʻqitish va barqaror maosh.")[i],
-                    "image": None, "theme": "light",
-                    "link": {"text": ("Вакансии", "Vakansiyalar")[i],
-                             "page": careers.get_translation(self.loc[code]).pk, "url": ""}}})
+                items.append(slide(
+                    ("Доставка корма домой", "Yemni uyga yetkazib beramiz")[i],
+                    ("Закажите в приложении Zoo Planeta или в сервисах доставки.",
+                     "Zoo Planeta ilovasida yoki yetkazib berish xizmatlarida buyurtma bering.")[i],
+                    ("Заказать доставку", "Buyurtma berish")[i], delivery, "light",
+                    [(n, ("магазинов отправляют заказы", "ta doʻkon buyurtma joʻnatadi")[i]),
+                     ("3", ("сервиса доставки (демо)", "yetkazib berish xizmati (demo)")[i])]))
+                items.append(slide(
+                    ("Кешбэк с каждой покупки", "Har bir xariddan keshbek")[i],
+                    ("Вступайте в программу UDS и оплачивайте баллами до части покупки.",
+                     "UDS dasturiga qoʻshiling va xaridning bir qismini ballar bilan toʻlang.")[i],
+                    ("Бонусы UDS", "UDS bonuslari")[i], loyalty, "dark",
+                    [("до 5%", ("кешбэк баллами (демо)", "ball bilan keshbek (demo)")[i]),
+                     (n, ("магазинов принимают баллы", "ta doʻkonda ball qabul qilinadi")[i])]))
+                items.append(slide(
+                    ("−20% на сухие корма для кошек", "Mushuklar uchun quruq yemga −20%")[i],
+                    ("Две недели во всех магазинах сети.", "Ikki hafta davomida barcha doʻkonlarda.")[i],
+                    ("Все акции", "Barcha aksiyalar")[i], promos, "dark",
+                    [("−20%", ("на сухие корма", "quruq yemlarga")[i]),
+                     ("14 дней" if i == 0 else "14 kun", ("во всех магазинах", "barcha doʻkonlarda")[i])]))
             else:
-                items.append({"type": "slide", "value": {
-                    "title": "Partner with a growing pet retail chain",
-                    "text": "Supply, brand distribution and retail premises in Tashkent.",
-                    "image": None, "theme": "dark",
-                    "link": {"text": "Become a partner", "page": partners.get_translation(self.loc["en"]).pk, "url": ""}}})
+                items.append(slide(
+                    "Partner with a growing pet retail chain",
+                    "Supply, brand distribution and retail premises in Tashkent.",
+                    "Become a partner", partners, "dark",
+                    [(n, "stores in Tashkent"), (d, "city districts")]))
             return items
 
         def body(i, code):

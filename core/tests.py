@@ -275,7 +275,7 @@ class SectionTests(TestCase):
 
     def test_home_shows_every_section_in_order(self):
         html = self.client.get("/ru/").content.decode()
-        markers = ["Крупная сеть зоомагазинов", "/ru/catalog/dogs/", "/ru/promos/promo-", "Проверенный ассортимент",
+        markers = ["/ru/promos/promo-", "Крупная сеть зоомагазинов", "/ru/catalog/dogs/", "Проверенный ассортимент",
                    "data-overview-map", "/ru/news/news-", "charity-teaser", "Royal Canin"]
         positions = [html.index(m) for m in markers]
         self.assertEqual(positions, sorted(positions))
@@ -455,3 +455,47 @@ class TeamAndSeedTests(TestCase):
         self.assertEqual(StorePage.objects.count(), stores_before)
         call_command("seed_demo", "--missing", stdout=open("/dev/null", "w"))  # idempotent
         self.assertEqual(DeliveryPage.objects.count(), 2)
+
+
+
+class HeroSlideTests(TestCase):
+    def test_slide_look_colours_and_tone(self):
+        from core.templatetags.site_tags import slide_look
+        self.assertEqual(slide_look({"theme": "dark"}), {"bg": "#111111", "tone": "dark"})
+        self.assertEqual(slide_look({"theme": "yellow"})["tone"], "light")
+        self.assertEqual(slide_look({"bg_color": "#ffffff", "theme": "dark"}), {"bg": "#FFFFFF", "tone": "light"})
+        self.assertEqual(slide_look({"bg_color": "red", "theme": "light"})["bg"], "#F6F5F1")  # bad hex ignored
+
+    @override_settings(MEDIA_ROOT=__import__("tempfile").mkdtemp(prefix="zp-media-"))
+    def test_edge_colour_from_photo(self):
+        from io import BytesIO
+        from django.core.files.images import ImageFile
+        from PIL import Image as PILImage
+        from wagtail.images.models import Image
+        from core.templatetags.site_tags import slide_look
+        buf = BytesIO()
+        pic = PILImage.new("RGB", (200, 100), (20, 90, 200))
+        pic.paste((255, 255, 255), (100, 0, 200, 100))  # right half white: only the left edge counts
+        pic.save(buf, "PNG")
+        img = Image.objects.create(title="blue", file=ImageFile(BytesIO(buf.getvalue()), name="blue.png"))
+        look = slide_look({"image": img, "auto_bg": True, "image_style": "photo", "theme": "yellow"})
+        self.assertEqual(look, {"bg": "#145AC8", "tone": "dark"})
+        # a cut-out object keeps the theme colour
+        self.assertEqual(slide_look({"image": img, "auto_bg": True, "image_style": "object", "theme": "yellow"})["bg"],
+                         "#FDCC27")
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class HomeHeroRenderTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_demo", verbosity=0)
+
+    def test_hero_perks_tone_and_deals(self):
+        html = self.client.get("/ru/").content.decode()
+        self.assertIn('class="home-hero"', html)
+        self.assertIn('class="perks"', html)
+        self.assertIn('data-tone="dark"', html)      # UDS slide on black
+        self.assertIn('class="deal"', html)
+        self.assertIn("148 000 сум", html)
+        self.assertIn('class="slider-next"', html)

@@ -13,13 +13,31 @@ class LinkBlock(blocks.StructBlock):
         icon = "link"
 
 
+class PerkItem(blocks.StructBlock):
+    value = blocks.CharBlock(label="Цифра", max_length=16, help_text="Крупно: до 5%, 23, от 30 мин, −20%")
+    label = blocks.CharBlock(label="Подпись", max_length=40)
+
+
 class HeroSlideBlock(blocks.StructBlock):
-    title = blocks.CharBlock(label="Заголовок")
+    """A home banner. «Конструктор»: colour + photo/cut-out + headline + perks. «Готовый баннер»: two images."""
+
+    kind = blocks.ChoiceBlock(choices=[("build", "Конструктор"), ("banner", "Готовый баннер (картинка)")],
+                              default="build", label="Тип слайда")
+    title = blocks.CharBlock(label="Заголовок", help_text="Для готового баннера — описание картинки (для поиска и незрячих)")
     text = blocks.TextBlock(label="Текст", required=False)
-    image = ImageChooserBlock(label="Изображение", required=False)
+    image = ImageChooserBlock(label="Картинка справа", required=False,
+                              help_text="Фото на однотонном фоне или PNG без фона (питомец, телефон, упаковка)")
+    image_style = blocks.ChoiceBlock(choices=[("photo", "Фото до края экрана"), ("object", "Объект без фона (PNG)")],
+                                     default="photo", label="Как показать картинку")
     theme = blocks.ChoiceBlock(choices=[("yellow", "Жёлтый"), ("dark", "Чёрный"), ("light", "Светлый")],
-                               default="yellow", label="Фон")
+                               default="yellow", label="Фон, если нет картинки")
+    auto_bg = blocks.BooleanBlock(label="Цвет фона — под цвет края фото", required=False, default=True)
+    bg_color = blocks.CharBlock(label="Или свой цвет фона", required=False, max_length=7,
+                                help_text="HEX, напр. #FDCC27. Имеет приоритет")
+    perks = blocks.ListBlock(PerkItem(), label="Плашки-выгоды (до 3)", required=False, max_num=3, default=[])
     link = LinkBlock(required=False)
+    banner = ImageChooserBlock(label="Готовый баннер: компьютер", required=False, help_text="От 2400×1000 px")
+    banner_mobile = ImageChooserBlock(label="Готовый баннер: телефон", required=False, help_text="От 1080×1350 px")
 
     class Meta:
         label = "Слайд"

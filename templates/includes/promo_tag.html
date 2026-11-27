@@ -1,0 +1,13 @@
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+<a class="deal" href="{% pageurl promo %}">
+  <span class="deal-dates">{% if promo.is_upcoming %}{% t "from" %} {{ promo.date_from|short_date }}{% else %}{{ promo.date_from|short_date }} — {{ promo.date_to|short_date }}{% endif %}</span>
+  <span class="deal-media">
+    {% if promo.image %}{% image promo.image fill-480x400 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" with yellow=True %}{% endif %}
+    {% if promo.new_price %}
+    <span class="deal-price">{% if promo.old_price %}<s>{{ promo.old_price }}</s>{% endif %}<b>{{ promo.new_price }}</b></span>
+    {% if promo.badge %}<span class="deal-badge">{{ promo.badge }}</span>{% endif %}
+    {% elif promo.badge %}<span class="deal-price deal-price-only"><b>{{ promo.badge }}</b></span>{% endif %}
+  </span>
+  <span class="deal-body"><b>{{ promo.title }}</b>{% if promo.summary %}<span>{{ promo.summary }}</span>{% endif %}</span>
+  <span class="deal-cta">{% t "more" %}<svg class="icon"><use href="#i-arrow"/></svg></span>
+</a>

@@ -1,42 +1,70 @@
 {% extends "base.html" %}
 {% load static wagtailcore_tags wagtailimages_tags site_tags %}
 {% block extra_head %}{% if page.show_store_finder and stores_data %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endif %}{% endblock %}
+{% block body_class %}home-hero{% endblock %}
 {% block content %}
 {# 1. hero #}
 <section class="hero">
   {% if page.slides %}
   <div class="slider" data-slider>
     <div class="slides">
-      {% for block in page.slides %}{% with s=block.value %}
-      <div class="slide slide-{{ s.theme }}{% if s.image %} has-image{% endif %}{% if forloop.first %} is-active{% endif %}" role="group" aria-roledescription="slide" aria-label="{{ forloop.counter }} / {{ page.slides|length }}">
-        <div class="slide-media">{% if s.image %}{% if forloop.first %}{% srcset_image s.image fill-{800x600,1400x760,2200x1000} format-webp sizes="100vw" fetchpriority="high" %}{% else %}{% srcset_image s.image fill-{800x600,1400x760,2200x1000} format-webp sizes="100vw" loading="lazy" %}{% endif %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+      {% for block in page.slides %}{% with s=block.value %}{% slide_look s as look %}
+      <div class="slide slide-{{ s.kind }}{% if s.image %} has-image img-{{ s.image_style }}{% endif %}{% if forloop.first %} is-active{% endif %}" data-tone="{{ look.tone }}" style="--slide-bg:{{ look.bg }}" role="group" aria-roledescription="slide" aria-label="{{ forloop.counter }} / {{ page.slides|length }}">
+        {% if s.kind == "banner" and s.banner %}
+        <a class="slide-banner" href="{{ s.link|link_url|default:'#' }}">
+          <picture>
+            {% if s.banner_mobile %}{% image s.banner_mobile fill-1080x1350 format-webp as mob %}<source media="(max-width: 860px)" srcset="{{ mob.url }}">{% endif %}
+            {% if forloop.first %}{% srcset_image s.banner fill-{1400x640,2400x1000} format-webp sizes="100vw" alt=s.title fetchpriority="high" %}{% else %}{% srcset_image s.banner fill-{1400x640,2400x1000} format-webp sizes="100vw" alt=s.title loading="lazy" %}{% endif %}
+          </picture>
+          {% if forloop.first %}<h1 class="sr-only">{{ s.title }}</h1>{% endif %}
+        </a>
+        {% else %}
+        {% if s.image %}<div class="slide-media">{% if s.image_style == "object" %}{% if forloop.first %}{% image s.image max-1200x1000 format-webp fetchpriority="high" %}{% else %}{% image s.image max-1200x1000 format-webp loading="lazy" %}{% endif %}{% else %}{% if forloop.first %}{% srcset_image s.image fill-{800x600,1200x900,1600x1100} format-webp sizes="(max-width: 860px) 100vw, 55vw" fetchpriority="high" %}{% else %}{% srcset_image s.image fill-{800x600,1200x900,1600x1100} format-webp sizes="(max-width: 860px) 100vw, 55vw" loading="lazy" %}{% endif %}{% endif %}</div>{% endif %}
         <div class="slide-inner">
           <div class="slide-text">
             {% if forloop.first %}<h1>{{ s.title }}</h1>{% else %}<h2>{{ s.title }}</h2>{% endif %}
             {% if s.text %}<p>{{ s.text }}</p>{% endif %}
-            {% if s.link.text and s.link|link_url %}<a class="btn btn-lg {% if s.theme == 'dark' %}btn-yellow{% else %}btn-dark{% endif %}" href="{{ s.link|link_url }}">{{ s.link.text }}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
+            {% if s.perks %}<ul class="perks">{% for perk in s.perks %}<li><b>{{ perk.value }}</b><span>{{ perk.label }}</span></li>{% endfor %}</ul>{% endif %}
+            {% if s.link.text and s.link|link_url %}<a class="btn btn-lg {% if look.tone == 'dark' %}btn-light{% else %}btn-dark{% endif %}" href="{{ s.link|link_url }}">{{ s.link.text }}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
           </div>
         </div>
+        {% endif %}
       </div>
       {% endwith %}{% endfor %}
     </div>
     {% if page.slides|length > 1 %}
     <div class="slider-ui">
-      <button class="slider-arrow" type="button" data-prev aria-label="{% t 'prev' %}"><svg class="icon"><use href="#i-arrow-left"/></svg></button>
-      <div class="slider-dots">{% for b in page.slides %}<button type="button" aria-label="{{ forloop.counter }}"{% if forloop.first %} class="is-active"{% endif %}></button>{% endfor %}</div>
-      <button class="slider-arrow" type="button" data-next aria-label="{% t 'next' %}"><svg class="icon"><use href="#i-arrow"/></svg></button>
+      <div class="slider-dots">{% for block in page.slides %}{% with s=block.value %}{% slide_look s as look %}
+        <button type="button" aria-label="{{ s.title }}" style="--slide-bg:{{ look.bg }}"{% if forloop.first %} class="is-active"{% endif %}>{% if s.kind == "banner" and s.banner %}{% image s.banner fill-120x120 format-webp alt="" %}{% elif s.image %}{% image s.image fill-120x120 format-webp alt="" %}{% endif %}</button>
+      {% endwith %}{% endfor %}</div>
+      <button class="slider-next" type="button" data-next aria-label="{% t 'next' %}"><svg class="icon"><use href="#i-arrow"/></svg></button>
     </div>
     {% endif %}
   </div>
   {% else %}
     <h1 class="sr-only">{{ page.title }}</h1>
   {% endif %}
+</section>
 
+{# 1b. deals of the week, right under the hero #}
+{% if page.show_promos and promos %}
+<section class="section deals">
+  <div class="container">
+    <div class="section-head">
+      <div><h2>{% t "deals_title" %}</h2></div>
+      {% if promo_index %}<a class="link-arrow" href="{% pageurl promo_index %}">{% t "all_promos" %}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
+    </div>
+    <div class="deal-grid scroller-m reveal-group">{% for promo in promos %}{% include "includes/promo_tag.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section-sm quick-section">
   <div class="container">
     {% find_page "pages.CareersPage" as careers %}{% find_page "pages.PartnersPage" as partners %}
     <nav class="quick" aria-label="Quick links">
       {% if store_index %}<a href="{% pageurl store_index %}"><span class="quick-ic"><svg class="icon"><use href="#i-store"/></svg></span><span><b>{{ store_index.title }}</b><span>{{ store_count }} {% t "stores_in_tashkent" %}</span></span></a>{% endif %}
-      {% if promo_index %}<a href="{% pageurl promo_index %}"><span class="quick-ic"><svg class="icon"><use href="#i-tag"/></svg></span><span><b>{{ promo_index.title }}</b><span>{% t "quick_promos" %}</span></span></a>{% endif %}
+      {% if delivery_page %}<a href="{% pageurl delivery_page %}"><span class="quick-ic"><svg class="icon"><use href="#i-truck"/></svg></span><span><b>{{ delivery_page.title }}</b><span>{% t "delivery_card_title" %}</span></span></a>{% elif promo_index %}<a href="{% pageurl promo_index %}"><span class="quick-ic"><svg class="icon"><use href="#i-tag"/></svg></span><span><b>{{ promo_index.title }}</b><span>{% t "quick_promos" %}</span></span></a>{% endif %}
       {% if careers %}<a href="{% pageurl careers %}"><span class="quick-ic"><svg class="icon"><use href="#i-work"/></svg></span><span><b>{{ careers.title }}</b><span>{% t "quick_careers" %}</span></span></a>{% endif %}
       {% if partners %}<a href="{% pageurl partners %}"><span class="quick-ic"><svg class="icon"><use href="#i-partner"/></svg></span><span><b>{{ partners.title }}</b><span>{% t "quick_partners" %}</span></span></a>{% endif %}
     </nav>
@@ -69,22 +97,9 @@
 </section>
 {% endif %}
 
-{# 4. promos #}
-{% if page.show_promos and promos %}
-<section class="section">
-  <div class="container">
-    <div class="section-head">
-      <div><h2>{% t "current_promos" %}</h2></div>
-      {% if promo_index %}<a class="link-arrow" href="{% pageurl promo_index %}">{% t "all_promos" %}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
-    </div>
-    <div class="grid grid-4 scroller-m reveal-group">{% for promo in promos %}{% include "includes/promo_card.html" %}{% endfor %}</div>
-  </div>
-</section>
-{% endif %}
-
 {# 5. about + advantages #}
 {% if page.about_title or page.advantages %}
-<section class="section{% if not promos or not page.show_promos %}{% else %} section-alt{% endif %}">
+<section class="section">
   <div class="container">
     {% if page.about_title %}
     <div class="about-split reveal">
