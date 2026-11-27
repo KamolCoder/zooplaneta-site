@@ -263,3 +263,75 @@ class IconTests(TestCase):
         html = self.client.get("/ru/").content.decode()
         self.assertIn('<link rel="icon" href="/favicon.ico"', html)
         self.assertIn('rel="apple-touch-icon"', html)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class SectionTests(TestCase):
+    """Catalogue, Give a Paw, home sections, news rubrics, store gallery/city, CMS roles."""
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_demo", verbosity=0)
+
+    def test_home_shows_every_section_in_order(self):
+        html = self.client.get("/ru/").content.decode()
+        markers = ["Крупная сеть зоомагазинов", "/ru/catalog/dogs/", "/ru/promos/promo-", "Проверенный ассортимент",
+                   "data-overview-map", "/ru/news/news-", "charity-teaser", "Royal Canin"]
+        positions = [html.index(m) for m in markers]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn(">23<", html)  # {stores} placeholder in stats replaced by the store count
+
+    def test_home_sections_can_be_switched_off(self):
+        home = HomePage.objects.get(locale__language_code="ru")
+        home.show_categories = home.show_charity = home.show_brands = False
+        home.save_revision().publish()
+        html = self.client.get("/ru/").content.decode()
+        self.assertNotIn("/ru/catalog/dogs/", html)
+        self.assertNotIn("charity-teaser", html)
+
+    def test_catalogue(self):
+        resp = self.client.get("/ru/catalog/")
+        self.assertEqual(len(resp.context["categories"]), 8)
+        resp = self.client.get("/ru/catalog/dogs/")
+        self.assertContains(resp, "Сухие корма")
+        self.assertContains(resp, "Royal Canin")
+        self.assertEqual(self.client.get("/uz/catalog/cats/").status_code, 200)
+
+    def test_give_a_paw_groups_and_story_status(self):
+        resp = self.client.get("/ru/give-a-paw/")
+        self.assertEqual(len(resp.context["stories"]), 2)
+        self.assertContains(resp, "Ищет дом")
+        self.assertEqual(self.client.get("/en/give-a-paw/").status_code, 404)  # RU + UZ only
+
+    def test_news_kind_filter_and_article_jsonld(self):
+        resp = self.client.get("/ru/news/?kind=vet")
+        self.assertEqual([p.kind for p in resp.context["news_page"]], ["vet"])
+        resp = self.client.get("/ru/news/?kind=bogus")
+        self.assertEqual(resp.context["kind"], "")
+        self.assertContains(self.client.get("/ru/news/news-1/"), '"@type": "NewsArticle"')
+
+    def test_store_city_and_gallery(self):
+        from wagtail.images.tests.utils import get_test_image_file
+        from wagtail.images.models import Image
+        from stores.models import StorePhoto
+        store = StorePage.objects.get(locale__language_code="ru", slug="store-01")
+        img = Image.objects.create(title="shop", file=get_test_image_file())
+        StorePhoto.objects.create(page=store, image=img, caption="Торговый зал")
+        resp = self.client.get(store.url)
+        self.assertContains(resp, "Торговый зал")
+        self.assertContains(resp, '"addressLocality": "Ташкент"')
+        self.assertEqual(self.client.get("/api/stores/ru/").json()["results"][0]["city"], "Ташкент")
+
+    def test_privacy_link_in_footer(self):
+        self.assertContains(self.client.get("/uz/"), 'href="/uz/privacy/"')
+
+    def test_setup_roles_limits_sections(self):
+        from django.contrib.auth.models import Group
+        from wagtail.models import GroupPagePermission
+        call_command("setup_roles", stdout=open("/dev/null", "w"))
+        call_command("setup_roles", stdout=open("/dev/null", "w"))  # idempotent
+        hr = Group.objects.get(name="HR")
+        pages = set(GroupPagePermission.objects.filter(group=hr).values_list("page__slug", flat=True))
+        self.assertEqual(pages, {"careers"})
+        self.assertTrue(hr.permissions.filter(codename="view_jobapplication").exists())
+        self.assertEqual(GroupPagePermission.objects.filter(group=hr, permission__codename="publish_page").count(), 2)

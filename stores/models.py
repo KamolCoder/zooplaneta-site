@@ -3,9 +3,10 @@ from datetime import time
 
 from django.db import models
 from django.utils import timezone
-from wagtail.admin.panels import FieldPanel, FieldRowPanel, MultiFieldPanel
+from modelcluster.fields import ParentalKey
+from wagtail.admin.panels import FieldPanel, FieldRowPanel, InlinePanel, MultiFieldPanel
 from wagtail.fields import RichTextField
-from wagtail.models import Page
+from wagtail.models import Orderable, Page
 from wagtail.search import index
 
 
@@ -42,11 +43,13 @@ class StoreIndexPage(Page):
         ctx["stores"] = stores
         ctx["stores_data"] = [s.public_dict() for s in stores]
         ctx["districts"] = sorted({s.district for s in stores if s.district})
+        ctx["cities"] = sorted({s.city for s in stores if s.city})
         ctx["query"] = request.GET.get("q", "")[:100]
         return ctx
 
 
 class StorePage(Page):
+    city = models.CharField("Город", max_length=60, default="Ташкент")
     district = models.CharField("Район", max_length=100, blank=True)
     address = models.CharField("Адрес", max_length=255)
     landmark = models.CharField("Ориентир", max_length=255, blank=True)
@@ -66,12 +69,14 @@ class StorePage(Page):
     search_fields = Page.search_fields + [index.SearchField("address"), index.SearchField("district"),
                                           index.SearchField("landmark")]
     content_panels = Page.content_panels + [
-        MultiFieldPanel([FieldPanel("district"), FieldPanel("address"), FieldPanel("landmark"),
+        MultiFieldPanel([FieldRowPanel([FieldPanel("city"), FieldPanel("district")]), FieldPanel("address"), FieldPanel("landmark"),
                          FieldPanel("metro"), FieldPanel("phone")], "Адрес и связь"),
         MultiFieldPanel([FieldRowPanel([FieldPanel("opens"), FieldPanel("closes")])], "Часы работы"),
         MultiFieldPanel([FieldRowPanel([FieldPanel("latitude"), FieldPanel("longitude")])], "Координаты",
                         help_text="В Яндекс/Google Картах: правый клик по точке → скопировать координаты"),
-        FieldPanel("image"), FieldPanel("features"), FieldPanel("description"),
+        FieldPanel("image"),
+        InlinePanel("photos", label="Фото", heading="Галерея магазина"),
+        FieldPanel("features"), FieldPanel("description"),
     ]
     parent_page_types = ["stores.StoreIndexPage"]
     subpage_types = []
@@ -141,7 +146,7 @@ class StorePage(Page):
             "url": self.full_url,
             "telephone": self.phone or site.phone,
             "address": {"@type": "PostalAddress", "streetAddress": self.address,
-                        "addressLocality": "Tashkent", "addressCountry": "UZ"},
+                        "addressLocality": self.city or "Tashkent", "addressCountry": "UZ"},
             "openingHoursSpecification": [{
                 "@type": "OpeningHoursSpecification",
                 "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -150,8 +155,9 @@ class StorePage(Page):
             }],
             "parentOrganization": {"@id": absolute("/#organization")},
         }
-        if self.image:
-            data["image"] = absolute(self.image.get_rendition("fill-1200x800|format-jpeg").url)
+        images = [img for img in [self.image, *(p.image for p in self.photos.all())] if img]
+        if images:
+            data["image"] = [absolute(img.get_rendition("fill-1200x800|format-jpeg").url) for img in images[:5]]
         if self.has_coords:
             data["geo"] = {"@type": "GeoCoordinates", "latitude": float(self.latitude),
                            "longitude": float(self.longitude)}
@@ -166,6 +172,7 @@ class StorePage(Page):
         return {
             "id": self.pk,
             "name": self.title,
+            "city": self.city,
             "district": self.district,
             "address": self.address,
             "landmark": self.landmark,
@@ -178,3 +185,12 @@ class StorePage(Page):
             "url": self.url,
             "route": self.route_url,
         }
+
+
+class StorePhoto(Orderable):
+    page = ParentalKey(StorePage, on_delete=models.CASCADE, related_name="photos")
+    image = models.ForeignKey("wagtailimages.Image", on_delete=models.CASCADE, related_name="+",
+                              verbose_name="Фото")
+    caption = models.CharField("Подпись", max_length=120, blank=True)
+
+    panels = [FieldPanel("image"), FieldPanel("caption")]

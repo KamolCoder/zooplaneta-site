@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "pages",
     "stores",
     "leads",
+    "catalog",
 
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",

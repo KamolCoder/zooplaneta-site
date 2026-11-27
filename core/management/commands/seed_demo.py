@@ -15,8 +15,10 @@ from django.db import transaction
 from django.utils import timezone
 from wagtail.models import Locale, Page, Site
 
-from pages.models import (CareersPage, ContactPage, HomePage, NewsIndexPage, NewsPage, PartnersPage,
-                          PromoIndexPage, PromoPage, StandardPage, VacancyPage)
+from catalog.models import Brand, CategoryIndexPage, CategoryPage
+from core.models import SiteSettings
+from pages.models import (CareersPage, CharityIndexPage, CharityPage, ContactPage, HomePage, NewsIndexPage, NewsPage,
+                          PartnersPage, PromoIndexPage, PromoPage, StandardPage, VacancyPage)
 from stores.models import StoreIndexPage, StorePage
 
 L = ("ru", "uz", "en")
@@ -79,6 +81,60 @@ BRANDS = ["Royal Canin", "Purina Pro Plan", "Hill's", "Brit", "Acana", "Monge", 
           "Pedigree", "Tetra", "Vitakraft", "Trixie"]
 
 
+# slug, icon, title, summary, subcategories (ru/uz/en), brands
+CATEGORIES = [
+    ("dogs", "dog", ("Для собак", "Itlar uchun", "Dogs"),
+     ("Корма, лакомства, амуниция и лежанки", "Yem, shirinliklar, anjom va toʻshaklar", "Food, treats, leads and beds"),
+     ("Сухие корма, Влажные корма, Лакомства, Ошейники и поводки, Лежанки, Одежда",
+      "Quruq yem, Hoʻl yem, Shirinliklar, Boʻyinbogʻ va tasmalar, Toʻshaklar, Kiyimlar",
+      "Dry food, Wet food, Treats, Collars and leads, Beds, Clothing"),
+     ["Royal Canin", "Purina Pro Plan", "Hill's", "Brit", "Acana", "Pedigree", "Trixie"]),
+    ("cats", "cat", ("Для кошек", "Mushuklar uchun", "Cats"),
+     ("Корма, наполнители, когтеточки и игрушки", "Yem, toʻldirgich, tirnoqcharx va oʻyinchoqlar",
+      "Food, litter, scratchers and toys"),
+     ("Сухие корма, Влажные корма, Наполнители, Лотки, Когтеточки, Игрушки",
+      "Quruq yem, Hoʻl yem, Toʻldirgichlar, Tovoqlar, Tirnoqcharxlar, Oʻyinchoqlar",
+      "Dry food, Wet food, Litter, Litter boxes, Scratchers, Toys"),
+     ["Royal Canin", "Purina Pro Plan", "Hill's", "Brit", "Monge", "Whiskas"]),
+    ("birds", "bird", ("Для птиц", "Qushlar uchun", "Birds"),
+     ("Зерновые смеси, клетки и аксессуары", "Don aralashmalari, kataklar va aksessuarlar", "Seed mixes, cages, accessories"),
+     ("Зерновые смеси, Лакомства, Клетки, Поилки и кормушки, Минералы",
+      "Don aralashmalari, Shirinliklar, Kataklar, Suv va yem idishlari, Minerallar",
+      "Seed mixes, Treats, Cages, Feeders, Minerals"),
+     ["Vitakraft", "Trixie"]),
+    ("rodents", "rodent", ("Для грызунов", "Kemiruvchilar uchun", "Small pets"),
+     ("Корма, сено, клетки и наполнители", "Yem, pichan, kataklar va toʻldirgichlar", "Food, hay, cages and bedding"),
+     ("Корма, Сено, Клетки, Наполнители, Домики, Лакомства",
+      "Yem, Pichan, Kataklar, Toʻldirgichlar, Uychalar, Shirinliklar",
+      "Food, Hay, Cages, Bedding, Houses, Treats"),
+     ["Vitakraft", "Trixie"]),
+    ("aquatics", "fish", ("Аквариумистика", "Akvariumistika", "Aquatics"),
+     ("Аквариумы, фильтры, корма для рыб", "Akvarium, filtr, baliq yemi", "Tanks, filters and fish food"),
+     ("Аквариумы, Фильтры и компрессоры, Корма для рыб, Грунт и декор, Химия для воды",
+      "Akvariumlar, Filtr va kompressorlar, Baliq yemi, Grunt va dekor, Suv uchun kimyo",
+      "Aquariums, Filters and pumps, Fish food, Gravel and decor, Water care"),
+     ["Tetra"]),
+    ("vet", "vet", ("Ветеринарные товары", "Veterinariya mahsulotlari", "Vet products"),
+     ("Средства от блох и клещей, витамины", "Burga va kanaga qarshi vositalar, vitaminlar", "Flea and tick, vitamins"),
+     ("От блох и клещей, Витамины, Глистогонные, Уход за глазами и ушами",
+      "Burga va kanaga qarshi, Vitaminlar, Gijjaga qarshi, Koʻz va quloq parvarishi",
+      "Flea and tick, Vitamins, Dewormers, Eye and ear care"),
+     ["Hill's", "Royal Canin"]),
+    ("accessories", "bowl", ("Аксессуары", "Aksessuarlar", "Accessories"),
+     ("Миски, переноски, лежанки, амуниция", "Idishlar, tashish qutilari, toʻshaklar", "Bowls, carriers, beds"),
+     ("Миски, Переноски, Лежанки, Груминг, Пелёнки, Шампуни",
+      "Idishlar, Tashish qutilari, Toʻshaklar, Gruming, Tagliklar, Shampunlar",
+      "Bowls, Carriers, Beds, Grooming, Pads, Shampoos"),
+     ["Trixie"]),
+    ("toys", "toy", ("Игрушки", "Oʻyinchoqlar", "Toys"),
+     ("Для игр, тренировок и жевания", "Oʻyin, mashq va kemirish uchun", "For play, training and chewing"),
+     ("Мячи, Канаты, Дразнилки, Интерактивные игрушки, Жевательные игрушки",
+      "Toʻplar, Arqonlar, Qiziqtirgichlar, Interaktiv oʻyinchoqlar, Kemiriladigan oʻyinchoqlar",
+      "Balls, Ropes, Teasers, Interactive toys, Chew toys"),
+     ["Trixie"]),
+]
+
+
 class Command(BaseCommand):
     help = "Fill the site with demo content in RU / UZ / EN"
 
@@ -105,14 +161,20 @@ class Command(BaseCommand):
         Site.objects.update_or_create(is_default_site=True, defaults={
             "hostname": hostname, "port": port, "root_page": home, "site_name": "Zoo Planeta"})
 
+        # creation order = menu order
         about = self.build_about(home)
         stores = self.build_stores(home)
+        self.build_catalog(home)
         promos = self.build_promos(home)
+        self.build_news(home)
+        self.build_charity(home)
         careers = self.build_careers(home)
         partners = self.build_partners(home)
         self.build_contacts(home)
-        self.build_news(home)
-        self.build_privacy(home)
+        privacy = self.build_privacy(home)
+        settings = SiteSettings.load()
+        settings.privacy_page = privacy
+        settings.save()
         self.fill_home(home, about, stores, promos, careers, partners)
         self.stdout.write(self.style.SUCCESS("Demo content created. Open /ru/ — and /cms/ to edit it."))
 
@@ -201,6 +263,11 @@ class Command(BaseCommand):
                               "Har bir xaridor toʻgʻri maslahat olishi uchun xodimlarni oʻqitamiz.",
                               "We train our staff so every customer gets the right advice.")[i], "image": None, "page": None},
                 ]}},
+            {"type": "stores_map", "value": {
+                "title": ("География сети", "Tarmoq geografiyasi", "Where we are")[i],
+                "text": ("Магазины Zoo Planeta работают во всех крупных районах Ташкента.",
+                         "Zoo Planeta doʻkonlari Toshkentning barcha yirik tumanlarida ishlaydi.",
+                         "Zoo Planeta stores operate in every major district of Tashkent.")[i]}},
         ]
         return self.tri(home, StandardPage, slug="about", show_in_menus=(True,) * 3,
                         title=("О компании", "Kompaniya haqida", "About us"),
@@ -284,7 +351,7 @@ class Command(BaseCommand):
                           "From sales assistant to store manager.")),
                     ]]}},
         ]
-        careers = self.tri(home, CareersPage, langs=("ru", "uz"), slug="careers", show_in_menus=(True, True),
+        careers = self.tri(home, CareersPage, langs=("ru", "uz"), slug="careers", show_in_menus=(False, False),
                            title=("Карьера", "Karyera"),
                            intro=("Работа в сети зоомагазинов для тех, кто любит животных.",
                                   "Hayvonlarni sevadiganlar uchun zoodoʻkonlar tarmogʻida ish."),
@@ -348,7 +415,7 @@ class Command(BaseCommand):
             {"type": "logos", "value": {"title": ("Бренды в наших магазинах", "Doʻkonlarimizdagi brendlar",
                                                   "Brands in our stores")[i], "names": BRANDS, "logos": []}},
         ]
-        return self.tri(home, PartnersPage, slug="partners", show_in_menus=(True,) * 3,
+        return self.tri(home, PartnersPage, slug="partners", show_in_menus=(False, False, True),
                         title=("Партнёрам", "Hamkorlarga", "Partners"),
                         intro=("Сотрудничество с сетью зоомагазинов Zoo Planeta: поставки, дистрибуция брендов, аренда.",
                                "Zoo Planeta zoodoʻkonlar tarmogʻi bilan hamkorlik: yetkazib berish, brend distribyutsiyasi, ijara.",
@@ -366,23 +433,93 @@ class Command(BaseCommand):
                                "Customer line, store addresses and feedback."))
 
     def build_news(self, home):
-        index = self.tri(home, NewsIndexPage, langs=("ru", "uz"), slug="news", title=("Новости", "Yangiliklar"),
+        index = self.tri(home, NewsIndexPage, langs=("ru", "uz"), slug="news", show_in_menus=(True, True), title=("Новости", "Yangiliklar"),
                          intro=("События и новости сети Zoo Planeta.", "Zoo Planeta tarmogʻi yangiliklari."))
         today = timezone.localdate()
         news = [
-            (("Открыли новый магазин в Сергели", "Sergelida yangi doʻkon ochildi"), 3,
+            (("Открыли новый магазин в Сергели", "Sergelida yangi doʻkon ochildi"), 3, "opening",
              ("Ещё один магазин Zoo Planeta теперь работает в Сергелийском районе.",
               "Sergeli tumanida yana bir Zoo Planeta doʻkoni ishga tushdi.")),
-            (("Как выбрать корм для котёнка", "Mushukcha uchun yemni qanday tanlash kerak"), 12,
+            (("Как выбрать корм для котёнка", "Mushukcha uchun yemni qanday tanlash kerak"), 12, "vet",
              ("Советы наших консультантов: на что смотреть на упаковке.",
               "Maslahatchilarimiz tavsiyalari: qadoqda nimaga eʼtibor berish kerak.")),
-            (("Zoo Planeta поддержала приют для животных", "Zoo Planeta hayvonlar boshpanasini qoʻllab-quvvatladi"), 25,
+            (("Zoo Planeta поддержала приют для животных", "Zoo Planeta hayvonlar boshpanasini qoʻllab-quvvatladi"), 25, "event",
              ("Передали корма и наполнители в городской приют.", "Shahar boshpanasiga yem va toʻldirgichlar topshirildi.")),
         ]
-        for k, (title, ago, summary) in enumerate(news, start=1):
+        news.append((("Зимний уход за лапами собаки", "Qishda it panjalarini parvarishlash"), 40, "care",
+                     ("Реагенты и холод: как защитить лапы на прогулке.",
+                      "Reagentlar va sovuq: sayrda panjalarni qanday himoya qilish kerak.")))
+        for k, (title, ago, kind, summary) in enumerate(news, start=1):
             self.tri(index, NewsPage, langs=("ru", "uz"), slug=f"news-{k}", title=title, summary=summary,
+                     kind=(kind, kind),
                      date=(today - dt.timedelta(days=ago),) * 2,
                      body=([{"type": "text", "value": rt(summary[0], "Демо-текст новости — замените в CMS.")}],
+                           [{"type": "text", "value": rt(summary[1], "Demo matn — CMS orqali almashtiring.")}]))
+        return index
+
+    def build_catalog(self, home):
+        index = self.tri(home, CategoryIndexPage, slug="catalog", show_in_menus=(True,) * 3,
+                         title=("Каталог", "Katalog", "Catalogue"),
+                         intro=("Основные направления ассортимента Zoo Planeta. Сайт информационный — купить товар можно "
+                                "в любом из наших магазинов.",
+                                "Zoo Planeta assortimentining asosiy yoʻnalishlari. Sayt maʼlumot uchun — mahsulotni "
+                                "istalgan doʻkonimizdan xarid qilishingiz mumkin.",
+                                "The main product categories at Zoo Planeta stores."),
+                         note=("", "", ""))
+        brands = {}
+        for k, name in enumerate(BRANDS):
+            brands[name] = Brand.objects.get_or_create(name=name, defaults={"sort_order": k * 10})[0]
+        for k, (slug, icon, titles, summaries, subs, brand_names) in enumerate(CATEGORIES, start=1):
+            page = self.tri(index, CategoryPage, slug=slug, icon=(icon,) * 3, title=titles, summary=summaries,
+                            subcategories=subs)
+            for p in [page, *page.get_translations()]:
+                p = p.specific
+                p.brands.set([brands[b] for b in brand_names if b in brands])
+                p.save()
+                self.publish(p)
+        return index
+
+    def build_charity(self, home):
+        n = len(STORES)
+        index = self.tri(
+            home, CharityIndexPage, langs=("ru", "uz"), slug="give-a-paw", show_in_menus=(True, True),
+            title=("Give a Paw", "Give a Paw"),
+            intro=("Социальная программа Zoo Planeta: помогаем приютам и бездомным животным и объединяем людей, "
+                   "которым не всё равно.",
+                   "Zoo Planeta ijtimoiy dasturi: boshpanalar va uysiz hayvonlarga yordam beramiz hamda befarq "
+                   "boʻlmagan insonlarni birlashtiramiz."),
+            donate_text=("", ""), donate_url=("", ""),
+            body=([{"type": "stats", "value": {"items": [
+                       {"value": "4", "label": "приюта-партнёра"}, {"value": "2,5 т", "label": "корма передано за год"},
+                       {"value": str(n), "label": "пунктов сбора помощи в магазинах"}]}},
+                   {"type": "text", "value": rt(
+                       "В каждом магазине Zoo Planeta стоит корзина Give a Paw: покупатели оставляют в ней корм, "
+                       "наполнитель и игрушки, а мы раз в месяц передаём собранное приютам-партнёрам.",
+                       "Демо-текст — замените в CMS.")}],
+                  [{"type": "stats", "value": {"items": [
+                       {"value": "4", "label": "hamkor boshpana"}, {"value": "2,5 t", "label": "yil davomida topshirilgan yem"},
+                       {"value": str(n), "label": "doʻkonlarda yordam yigʻish nuqtasi"}]}},
+                   {"type": "text", "value": rt(
+                       "Har bir Zoo Planeta doʻkonida Give a Paw savati bor: xaridorlar unga yem, toʻldirgich va "
+                       "oʻyinchoqlar qoldiradi, biz esa oyiga bir marta yigʻilganini hamkor boshpanalarga topshiramiz.",
+                       "Demo matn — CMS orqali almashtiring.")}]))
+        today = timezone.localdate()
+        items = [
+            ("project", "", 30, ("Корзина добра в каждом магазине", "Har bir doʻkonda ezgulik savati"),
+             ("Оставьте корм для приюта — мы доставим.", "Boshpana uchun yem qoldiring — biz yetkazamiz.")),
+            ("event", "", 14, ("День открытых дверей в приюте", "Boshpanada ochiq eshiklar kuni"),
+             ("Волонтёры Zoo Planeta провели день в городском приюте.",
+              "Zoo Planeta koʻngillilari shahar boshpanasida bir kun oʻtkazishdi.")),
+            ("story", "looking", 5, ("Рыжик ищет дом", "Ryjik uy izlamoqda"),
+             ("Ласковый кот, 2 года, привит и стерилизован.", "Mehribon mushuk, 2 yosh, emlangan va sterilizatsiya qilingan.")),
+            ("story", "home", 21, ("Белка нашла семью", "Belka oila topdi"),
+             ("Собака из приюта-партнёра теперь живёт в Юнусабаде.",
+              "Hamkor boshpanadagi it endi Yunusobodda yashaydi.")),
+        ]
+        for k, (kind, status, ago, title, summary) in enumerate(items, start=1):
+            self.tri(index, CharityPage, langs=("ru", "uz"), slug=f"gap-{k}", title=title, summary=summary,
+                     kind=(kind, kind), animal_status=(status, status), date=(today - dt.timedelta(days=ago),) * 2,
+                     body=([{"type": "text", "value": rt(summary[0], "Демо-текст — замените в CMS.")}],
                            [{"type": "text", "value": rt(summary[1], "Demo matn — CMS orqali almashtiring.")}]))
         return index
 
@@ -429,57 +566,70 @@ class Command(BaseCommand):
                     "link": {"text": "Become a partner", "page": partners.get_translation(self.loc["en"]).pk, "url": ""}}})
             return items
 
-        cats = [
-            (("Собаки", "Itlar", "Dogs"), ("Корма, лакомства, амуниция", "Yem, shirinliklar, anjomlar", "Food, treats, leads")),
-            (("Кошки", "Mushuklar", "Cats"), ("Корма, наполнители, когтеточки", "Yem, toʻldirgich, tirnoqcharx", "Food, litter, scratchers")),
-            (("Грызуны", "Kemiruvchilar", "Small pets"), ("Корма, сено, клетки", "Yem, pichan, kataklar", "Food, hay, cages")),
-            (("Птицы", "Qushlar", "Birds"), ("Зерновые смеси, клетки", "Don aralashmalari, kataklar", "Seed mixes, cages")),
-            (("Аквариумистика", "Akvariumistika", "Aquatics"), ("Аквариумы, фильтры, корма", "Akvarium, filtr, yem", "Tanks, filters, fish food")),
-            (("Ветаптека", "Vetapteka", "Vet pharmacy"), ("От блох и клещей, витамины", "Burga va kanaga qarshi, vitaminlar", "Flea & tick, vitamins")),
-            (("Уход и гигиена", "Parvarish va gigiena", "Grooming"), ("Шампуни, пелёнки, расчёски", "Shampun, taglik, taroq", "Shampoos, pads, brushes")),
-            (("Аксессуары", "Aksessuarlar", "Accessories"), ("Миски, лежанки, переноски", "Idish, toʻshak, tashish qutisi", "Bowls, beds, carriers")),
-        ]
-
         def body(i, code):
-            blocks = [
-                {"type": "categories", "value": {
-                    "title": ("Что есть в наших магазинах", "Doʻkonlarimizda nimalar bor", "What we sell")[i],
-                    "text": ("Наличие конкретного товара уточняйте в магазине.", "Aniq mahsulot borligini doʻkondan soʻrang.",
-                             "Product availability varies by store.")[i],
-                    "items": [{"title": t[i], "text": d[i], "image": None} for t, d in cats]}},
-                {"type": "text_image", "value": {
-                    "title": ("Zoo Planeta — зоомагазин в вашем районе", "Zoo Planeta — mahallangizdagi zoodoʻkon",
-                              "Zoo Planeta — the pet store next door")[i],
-                    "text": (rt("Мы открываем магазины у дома и держим одинаковые стандарты во всей сети: проверенный "
-                                "ассортимент, контроль сроков годности и внимательные консультанты."),
-                             rt("Doʻkonlarni uy yonida ochamiz va butun tarmoqda yagona standartlarni saqlaymiz: "
-                                "ishonchli assortiment, yaroqlilik muddati nazorati va eʼtiborli maslahatchilar."),
-                             rt("We open neighbourhood stores and keep one standard across the chain: a curated range, "
-                                "strict shelf-life control and helpful staff."))[i],
-                    "image": None, "image_left": True,
-                    "link": {"text": ("О компании", "Kompaniya haqida", "About us")[i],
-                             "page": about.get_translation(self.loc[code]).pk, "url": ""}}},
-                {"type": "logos", "value": {"title": ("Бренды", "Brendlar", "Brands")[i], "names": BRANDS, "logos": []}},
-            ]
             if code != "en":
-                blocks.append({"type": "cta", "value": {
+                return [{"type": "cta", "value": {
                     "title": ("Работа в Zoo Planeta", "Zoo Planetada ish")[i],
                     "text": ("Ищем продавцов, кассиров и управляющих. Официальное оформление и обучение.",
                              "Sotuvchi, kassir va boshqaruvchilarni izlaymiz. Rasmiy ishga qabul va oʻqitish.")[i],
-                    "theme": "yellow",
-                    "link": {"text": ("Смотреть вакансии", "Vakansiyalarni koʻrish")[i],
-                             "page": careers.get_translation(self.loc[code]).pk, "url": ""}}})
-            else:
-                blocks.append({"type": "cta", "value": {
-                    "title": "Looking for a retail partner in Uzbekistan?",
-                    "text": "We work with manufacturers and distributors of pet food and accessories.",
                     "theme": "dark",
-                    "link": {"text": "Partnership request", "page": partners.get_translation(self.loc["en"]).pk, "url": ""}}})
-            return blocks
+                    "link": {"text": ("Смотреть вакансии", "Vakansiyalarni koʻrish")[i],
+                             "page": careers.get_translation(self.loc[code]).pk, "url": ""}}}]
+            return [{"type": "cta", "value": {
+                "title": "Looking for a retail partner in Uzbekistan?",
+                "text": "We work with manufacturers and distributors of pet food and accessories.",
+                "theme": "dark",
+                "link": {"text": "Partnership request", "page": partners.get_translation(self.loc["en"]).pk, "url": ""}}}]
+
+        n = len(STORES)
+        intro = {
+            "intro_title": ("Крупная сеть зоомагазинов Ташкента", "Toshkentdagi yirik zoodoʻkonlar tarmogʻi",
+                            "A leading pet retail chain in Tashkent"),
+            "intro_text": ("Zoo Planeta объединяет магазины у дома, проверенных поставщиков и людей, которые любят "
+                           "животных. Единые стандарты качества и сервиса — в каждом филиале.",
+                           "Zoo Planeta uy yonidagi doʻkonlar, ishonchli yetkazib beruvchilar va hayvonlarni sevuvchi "
+                           "insonlarni birlashtiradi. Har bir filialda yagona sifat va xizmat standartlari.",
+                           "Zoo Planeta brings together neighbourhood stores, trusted suppliers and people who love "
+                           "animals, with one standard of quality and service in every branch."),
+            "about_title": ("Zoo Planeta — зоомагазин в вашем районе", "Zoo Planeta — mahallangizdagi zoodoʻkon",
+                            "Zoo Planeta — the pet store next door"),
+            "about_text": (rt("Мы открываем магазины у дома и держим одинаковые стандарты во всей сети: проверенный "
+                              "ассортимент, контроль сроков годности и внимательные консультанты."),
+                           rt("Doʻkonlarni uy yonida ochamiz va butun tarmoqda yagona standartlarni saqlaymiz: "
+                              "ishonchli assortiment, yaroqlilik muddati nazorati va eʼtiborli maslahatchilar."),
+                           rt("We open neighbourhood stores and keep one standard across the chain: a curated range, "
+                              "strict shelf-life control and helpful staff.")),
+        }
+        stats = [("{stores}", ("магазинов в Ташкенте", "ta doʻkon Toshkentda", "stores in Tashkent")),
+                 (str(len(DISTRICTS)), ("районов города", "ta shahar tumani", "city districts")),
+                 ("3 000+", ("товаров в ассортименте", "dan ortiq mahsulot", "products in range")),
+                 ("7/7", ("работаем без выходных", "dam olish kunlarisiz", "open every day"))]
+        advantages = [
+            ("store", ("Рядом с домом", "Uyingiz yonida", "Close to home"),
+             (f"{n} магазинов в разных районах города.", f"Shaharning turli tumanlarida {n} ta doʻkon.",
+              f"{n} stores across the city.")),
+            ("check", ("Проверенный ассортимент", "Ishonchli assortiment", "Trusted range"),
+             ("Работаем напрямую с производителями и официальными дистрибьюторами.",
+              "Ishlab chiqaruvchilar va rasmiy distribyutorlar bilan bevosita ishlaymiz.",
+              "We work directly with manufacturers and official distributors.")),
+            ("tag", ("Честные цены", "Halol narxlar", "Fair prices"),
+             ("Единые цены во всей сети и регулярные акции.", "Butun tarmoqda yagona narxlar va doimiy aksiyalar.",
+              "The same prices chain-wide and regular offers.")),
+            ("paw", ("Забота о животных", "Hayvonlarga gʻamxoʻrlik", "We care"),
+             ("Консультанты помогут с выбором, а программа Give a Paw — приютам.",
+              "Maslahatchilar tanlashda yordam beradi, Give a Paw esa boshpanalarga.",
+              "Staff help you choose, and Give a Paw supports shelters.")),
+        ]
 
         for i, code in enumerate(L):
             page = home.get_translation(self.loc[code]).specific
             page.slides = slides(i, code)
             page.body = body(i, code)
+            for field, values in intro.items():
+                setattr(page, field, values[i])
+            page.stats = [{"type": "stat", "value": {"value": v, "label": label[i]}} for v, label in stats]
+            page.advantages = [{"type": "item", "value": {"icon": ic, "title": t[i], "text": d[i]}}
+                               for ic, t, d in advantages]
+            page.about_page = about.get_translation(self.loc[code])
             page.save()
             self.publish(page)

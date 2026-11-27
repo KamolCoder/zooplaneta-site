@@ -1,0 +1,17 @@
+{% load static wagtailcore_tags site_tags %}
+<div class="stores-map-block">
+  <div class="stores-map-text">
+    {% if value.title %}<h2>{{ value.title }}</h2>{% endif %}
+    {% if value.text %}<p>{{ value.text }}</p>{% endif %}
+    <div class="home-stores-count"><div><b>{{ map_count }}</b><span>{% t "stores_word" %}</span></div>{% if map_districts %}<div><b>{{ map_districts }}</b><span>{% t "districts_word" %}</span></div>{% endif %}</div>
+    {% if store_index %}<a class="btn btn-dark" href="{% pageurl store_index %}"><svg class="icon"><use href="#i-pin"/></svg>{% t "find_store" %}</a>{% endif %}
+  </div>
+  {% if map_stores %}
+  <div class="home-map" role="region" aria-label="{% t 'store_map' %}" data-overview-map data-src="map-stores" data-more="{% t 'more' %}" data-route="{% t 'route' %}"></div>
+  {{ map_stores|json_script:"map-stores" }}
+  <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
+  <script>window.MAP_TILES = {url: "{{ map_tile_url|escapejs }}", attribution: "{{ map_tile_attribution|escapejs }}"};</script>
+  <script src="{% static 'vendor/leaflet/leaflet.js' %}" defer></script>
+  <script src="{% static 'js/stores.js' %}" defer></script>
+  {% endif %}
+</div>

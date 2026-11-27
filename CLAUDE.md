@@ -18,9 +18,15 @@ self-hosted Onest font and Leaflet (no CDNs).
   translations with `wagtail.contrib.simple_translation`. CMS at `ADMIN_URL` (default `cms/`).
 - `core/` — `SiteSettings` (contacts, one set for all languages), StreamField blocks (`blocks.py`),
   UI strings `ui.py` (`{% t "key" %}`; no gettext), template tags `site_tags.py`, `seed_demo`, `import_stores`.
-- `pages/` — Home, Standard, Contact, Promo index/page, News index/page, Careers/Vacancy, Partners.
+- `pages/` — Home (fixed section order: hero → intro+stats → categories → promos → about+advantages → stores map →
+  news → Give a Paw → brands → extra blocks), Standard, Contact, Promo index/page, News index/page (rubric `kind`,
+  `?kind=` filter, NewsArticle JSON-LD), Careers/Vacancy, Partners, CharityIndex/CharityPage (Give a Paw: project /
+  event / animal story, RU+UZ).
+- `catalog/` — informational catalogue: CategoryIndexPage/CategoryPage (icon, subcategories, brands) and the `Brand`
+  snippet. No products/prices; `code_1c` fields are the hook for a future 1C OData sync.
   `FormPageMixin`: POST → `leads.handling.handle_lead_form` (honeypot, 10/hour per IP, notify) → `?sent=1`.
-- `stores/` — StoreIndexPage (list + map, JSON in page) and StorePage (JSON-LD PetStore, nearby stores);
+- `stores/` — StoreIndexPage (list + map, city/district filters, JSON in page) and StorePage (city, photo gallery
+  `StorePhoto`, JSON-LD PetStore, nearby stores); overview maps (`data-overview-map`) are lazy-initialised in `stores.js`;
   `GET /api/stores/<lang>/`.
 - CMS: Wagtail default colours (no recolouring), Zoo Planeta logo via `templates/wagtailadmin/*`, light theme forced
   for everyone (`core/signals.py` + migration, theme choice hidden in `static/css/cms.css`), start page panels in
@@ -40,10 +46,11 @@ self-hosted Onest font and Leaflet (no CDNs).
 Brand from the logo: yellow `#FDCC27`, black `#111`, white / `#F6F5F1`. Onest. Yellow is a surface colour
 (banners, badges, CTA) — never yellow text on white. No gradients/blobs/emoji/eyebrow labels; restrained grid,
 14/22 px radii, line icons from `templates/includes/icons.html`, paw placeholder `includes/ph.html` until photos.
+Motion: `.reveal` / `.reveal-group` fade-in on scroll (only under `html.js`, off with reduced motion).
 Name is «Zoo Planeta» (Latin) in every language.
 
 ## Content rules
-EN is for foreign partners: home, about, stores, partners, contacts. Promos/news/vacancies are RU+UZ;
+EN is for foreign partners: home, about, stores, catalogue, partners, contacts. Promos/news/vacancies/Give a Paw are RU+UZ;
 untranslated pages are hidden from that language's menu automatically.
 Uzbek uses ʻ (U+02BB) and ʼ (U+02BC): oʻ, gʻ, maʼlumot.
 

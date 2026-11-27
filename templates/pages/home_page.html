@@ -1,6 +1,8 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags site_tags %}
+{% load static wagtailcore_tags wagtailimages_tags site_tags %}
+{% block extra_head %}{% if page.show_store_finder and stores_data %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endif %}{% endblock %}
 {% block content %}
+{# 1. hero #}
 <section class="hero">
   <div class="container">
     {% if page.slides %}
@@ -11,9 +13,9 @@
           <div class="slide-text">
             {% if forloop.first %}<h1>{{ s.title }}</h1>{% else %}<h2>{{ s.title }}</h2>{% endif %}
             {% if s.text %}<p>{{ s.text }}</p>{% endif %}
-            {% if s.link.text and s.link|link_url %}<a class="btn {% if s.theme == 'dark' %}btn-yellow{% else %}btn-dark{% endif %}" href="{{ s.link|link_url }}">{{ s.link.text }}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
+            {% if s.link.text and s.link|link_url %}<a class="btn btn-lg {% if s.theme == 'dark' %}btn-yellow{% else %}btn-dark{% endif %}" href="{{ s.link|link_url }}">{{ s.link.text }}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
           </div>
-          <div class="slide-media">{% if s.image %}{% image s.image fill-1200x960 format-webp %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+          <div class="slide-media">{% if s.image %}{% if forloop.first %}{% image s.image fill-1200x960 format-webp fetchpriority="high" %}{% else %}{% image s.image fill-1200x960 format-webp loading="lazy" %}{% endif %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
         </div>
         {% endwith %}{% endfor %}
       </div>
@@ -39,6 +41,33 @@
   </div>
 </section>
 
+{# 2. brand in short #}
+{% if page.intro_title or stats_list %}
+<section class="section intro">
+  <div class="container">
+    <div class="intro-grid reveal">
+      {% if page.intro_title %}<h2 class="intro-title">{{ page.intro_title }}</h2>{% endif %}
+      {% if page.intro_text %}<p class="intro-text">{{ page.intro_text }}</p>{% endif %}
+    </div>
+    {% if stats_list %}<div class="stats reveal" style="--n:{{ stats_list|length }}">{% for item in stats_list %}<div><b>{{ item.value }}</b><span>{{ item.label }}</span></div>{% endfor %}</div>{% endif %}
+  </div>
+</section>
+{% endif %}
+
+{# 3. categories #}
+{% if page.show_categories and categories %}
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head">
+      <div><h2>{% t "categories_title" %}</h2>{% if category_index.intro %}<p>{{ category_index.intro }}</p>{% endif %}</div>
+      <a class="link-arrow" href="{% pageurl category_index %}">{% t "all_categories" %}<svg class="icon"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="cat-tiles">{% for c in categories %}{% include "catalog/includes/category_tile.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+
+{# 4. promos #}
 {% if page.show_promos and promos %}
 <section class="section">
   <div class="container">
@@ -46,47 +75,116 @@
       <div><h2>{% t "current_promos" %}</h2></div>
       {% if promo_index %}<a class="link-arrow" href="{% pageurl promo_index %}">{% t "all_promos" %}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
     </div>
-    <div class="grid grid-4">{% for promo in promos %}{% include "includes/promo_card.html" %}{% endfor %}</div>
+    <div class="grid grid-4 scroller-m reveal-group">{% for promo in promos %}{% include "includes/promo_card.html" %}{% endfor %}</div>
   </div>
 </section>
 {% endif %}
 
+{# 5. about + advantages #}
+{% if page.about_title or page.advantages %}
+<section class="section{% if not promos or not page.show_promos %}{% else %} section-alt{% endif %}">
+  <div class="container">
+    {% if page.about_title %}
+    <div class="about-split reveal">
+      <div class="about-media">{% if page.about_image %}{% image page.about_image fill-960x760 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+      <div class="about-text">
+        <h2>{{ page.about_title }}</h2>
+        {% if page.about_text %}<div class="prose">{{ page.about_text|richtext }}</div>{% endif %}
+        {% if page.about_page %}<a class="btn btn-dark" href="{% pageurl page.about_page.localized %}">{% t "more" %}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% if page.advantages %}
+    <div class="advantages reveal-group">
+      {% for block in page.advantages %}{% with a=block.value %}
+      <div class="advantage"><span class="advantage-ic"><svg class="icon"><use href="#i-{{ a.icon }}"/></svg></span><h3>{{ a.title }}</h3>{% if a.text %}<p>{{ a.text }}</p>{% endif %}</div>
+      {% endwith %}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{# 6. stores: map + finder #}
 {% if page.show_store_finder and store_index %}
 <section class="section section-dark">
-  <div class="container finder">
-    <div>
-      <h2>{% t "finder_title" %}</h2>
-      <p>{% t "finder_text" %}</p>
+  <div class="container home-stores">
+    <div class="home-stores-text">
+      <h2>{% t "stores_title" %}</h2>
+      <p>{% t "stores_text" %}</p>
+      <div class="home-stores-count"><div><b>{{ store_count }}</b><span>{% t "stores_word" %}</span></div>{% if districts %}<div><b>{{ districts|length }}</b><span>{% t "districts_word" %}</span></div>{% endif %}</div>
       <form class="finder-form" action="{% pageurl store_index %}" method="get" role="search">
         <label class="field-search"><svg class="icon"><use href="#i-search"/></svg><span class="sr-only">{% t "search" %}</span><input type="search" name="q" placeholder="{% t 'search_placeholder' %}" autocomplete="off"></label>
         <button class="btn btn-yellow" type="submit">{% t "search" %}</button>
-        <a class="btn btn-ghost-light" href="{% pageurl store_index %}?near=1"><svg class="icon"><use href="#i-nav"/></svg>{% t "near_me" %}</a>
       </form>
+      <div class="home-stores-links">
+        <a class="btn btn-ghost-light" href="{% pageurl store_index %}?near=1"><svg class="icon"><use href="#i-nav"/></svg>{% t "near_me" %}</a>
+        <a class="link-arrow link-arrow-light" href="{% pageurl store_index %}">{% t "all_stores_list" %}<svg class="icon"><use href="#i-arrow"/></svg></a>
+      </div>
     </div>
-    <div class="finder-count">
-      <b>{{ store_count }}</b>
-      <span>{% t "stores_in_tashkent" %}</span>
-      <div class="district-chips">{% regroup store_index.stores|dictsort:"district" by district as by_district %}{% for d in by_district %}{% if d.grouper %}<a href="{% pageurl store_index %}?q={{ d.grouper|urlencode }}">{{ d.grouper }}</a>{% endif %}{% endfor %}</div>
-    </div>
+    {% if stores_data %}<div class="home-map" role="region" aria-label="{% t 'store_map' %}" data-overview-map data-src="stores-data" data-more="{% t 'more' %}" data-route="{% t 'route' %}"></div>{% endif %}
   </div>
 </section>
 {% endif %}
 
-{% if page.body %}
-<section class="section">
-  <div class="container">{% for block in page.body %}<div class="block block-{{ block.block_type }}">{% include_block block %}</div>{% endfor %}</div>
-</section>
-{% endif %}
-
+{# 7. news #}
 {% if page.show_news and news %}
-<section class="section section-alt">
+<section class="section">
   <div class="container">
     <div class="section-head">
       <div><h2>{% t "news" %}</h2></div>
       {% if news_index %}<a class="link-arrow" href="{% pageurl news_index %}">{% t "all_news" %}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
     </div>
-    <div class="grid grid-3">{% for item in news %}{% include "includes/news_card.html" %}{% endfor %}</div>
+    <div class="grid grid-3 scroller-m reveal-group">{% for item in news %}{% include "includes/news_card.html" %}{% endfor %}</div>
   </div>
 </section>
 {% endif %}
+
+{# 8. Give a Paw #}
+{% if page.show_charity and charity_index %}
+<section class="section section-yellow">
+  <div class="container charity-teaser">
+    <div class="charity-teaser-text reveal">
+      <span class="charity-mark"><svg class="icon"><use href="#i-heart"/></svg>Give a Paw</span>
+      <h2>{{ charity_index.title }}</h2>
+      {% if charity_index.intro %}<p>{{ charity_index.intro }}</p>{% endif %}
+      <div class="btn-row">
+        <a class="btn btn-dark" href="{% pageurl charity_index %}">{% t "charity_more" %}<svg class="icon"><use href="#i-arrow"/></svg></a>
+        {% if charity_index.donate_url and charity_index.donate_text %}<a class="btn btn-outline" href="{{ charity_index.donate_url }}" target="_blank" rel="noopener">{{ charity_index.donate_text }}</a>{% endif %}
+      </div>
+    </div>
+    {% if charity_items %}
+    <div class="charity-teaser-items reveal-group">
+      {% for item in charity_items %}
+      <a class="mini-card" href="{% pageurl item %}">
+        <span class="mini-card-media">{% if item.image %}{% image item.image fill-240x240 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" %}{% endif %}</span>
+        <span><small>{{ item.kind_label }}{% if item.status_label %} · {{ item.status_label }}{% endif %}</small><b>{{ item.title }}</b></span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{# 9. brands #}
+{% if page.show_brands and brands %}
+<section class="section">
+  <div class="container">
+    <div class="section-head"><div><h2>{% t "brands_title" %}</h2></div>{% find_page "pages.PartnersPage" as partners_page %}{% if partners_page %}<a class="link-arrow" href="{% pageurl partners_page %}">{{ partners_page.title }}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}</div>
+    <div class="logos reveal-group">{% for b in brands %}<div title="{{ b.name }}">{% if b.logo %}{% image b.logo max-240x96 loading="lazy" alt=b.name %}{% else %}{{ b.name }}{% endif %}</div>{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+
+{% if page.body %}
+<section class="section section-tight">
+  <div class="container">{% for block in page.body %}<div class="block block-{{ block.block_type }}">{% include_block block %}</div>{% endfor %}</div>
+</section>
+{% endif %}
+{% if page.show_store_finder and stores_data %}{{ stores_data|json_script:"stores-data" }}{% endif %}
 {% endblock %}
+{% block extra_js %}{% if page.show_store_finder and stores_data %}
+<script>window.MAP_TILES = {url: "{{ map_tile_url|escapejs }}", attribution: "{{ map_tile_attribution|escapejs }}"};</script>
+<script src="{% static 'vendor/leaflet/leaflet.js' %}" defer></script>
+<script src="{% static 'js/stores.js' %}" defer></script>{% endif %}{% endblock %}

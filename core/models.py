@@ -31,6 +31,9 @@ class SiteSettings(BaseGenericSetting):
     address_ru = models.CharField("Адрес офиса (RU)", max_length=255, blank=True, default="г. Ташкент")
     address_uz = models.CharField("Адрес офиса (UZ)", max_length=255, blank=True, default="Toshkent sh.")
     address_en = models.CharField("Адрес офиса (EN)", max_length=255, blank=True, default="Tashkent, Uzbekistan")
+    privacy_page = models.ForeignKey("wagtailcore.Page", null=True, blank=True, on_delete=models.SET_NULL,
+                                     related_name="+", verbose_name="Страница политики конфиденциальности",
+                                     help_text="Ссылка в подвале и у форм")
     office_lat = models.DecimalField("Офис: широта", max_digits=9, decimal_places=6, null=True, blank=True)
     office_lng = models.DecimalField("Офис: долгота", max_digits=9, decimal_places=6, null=True, blank=True)
 
@@ -43,7 +46,7 @@ class SiteSettings(BaseGenericSetting):
                          FieldPanel("yandex_metrika_id"), FieldPanel("ga4_id")], "Поисковики и аналитика"),
         MultiFieldPanel([FieldPanel("legal_name"), FieldPanel("tax_id"), FieldPanel("address_ru"),
                          FieldPanel("address_uz"), FieldPanel("address_en"), FieldPanel("office_lat"),
-                         FieldPanel("office_lng")], "Компания"),
+                         FieldPanel("office_lng"), FieldPanel("privacy_page")], "Компания"),
     ]
 
     class Meta:

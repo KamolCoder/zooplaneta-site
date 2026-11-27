@@ -6,7 +6,7 @@ from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Page
 from wagtail.search import index
 
-from core.blocks import HeroSlideBlock, body_blocks
+from core.blocks import AdvantageBlock, HeroSlideBlock, StatItem, body_blocks
 from leads.forms import FeedbackForm, JobApplicationForm, PartnerRequestForm
 from leads.handling import handle_lead_form
 
@@ -59,16 +59,39 @@ class FormPageMixin:
 # ── home ─────────────────────────────────────────────────────────────────────
 
 class HomePage(Page):
+    """Sections in a fixed order (see the template); each automatic section can be switched off."""
+
     slides = StreamField([("slide", HeroSlideBlock())], blank=True, verbose_name="Баннеры на главной",
                          use_json_field=True)
+    intro_title = models.CharField("Заголовок", max_length=160, blank=True,
+                                   help_text="Коротко о бренде, напр. «Крупнейшая сеть зоомагазинов Ташкента»")
+    intro_text = models.TextField("Текст", blank=True)
+    stats = StreamField([("stat", StatItem())], blank=True, verbose_name="Цифры", use_json_field=True,
+                        help_text="Число магазинов подставляется само, если написать в поле «Число» {stores}")
+    show_categories = models.BooleanField("Показывать категории", default=True)
     show_promos = models.BooleanField("Показывать акции", default=True)
-    show_store_finder = models.BooleanField("Показывать поиск магазина", default=True)
-    body = StreamField(body_blocks(), blank=True, verbose_name="Блоки страницы", use_json_field=True)
+    about_title = models.CharField("Заголовок", max_length=160, blank=True)
+    about_text = RichTextField("Текст", blank=True, features=["bold", "italic", "link"])
+    about_image = models.ForeignKey("wagtailimages.Image", null=True, blank=True, on_delete=models.SET_NULL,
+                                    related_name="+", verbose_name="Фото")
+    about_page = models.ForeignKey("wagtailcore.Page", null=True, blank=True, on_delete=models.SET_NULL,
+                                   related_name="+", verbose_name="Ссылка «Подробнее»")
+    advantages = StreamField([("item", AdvantageBlock())], blank=True, verbose_name="Преимущества",
+                             use_json_field=True)
+    show_store_finder = models.BooleanField("Показывать карту магазинов", default=True)
     show_news = models.BooleanField("Показывать новости", default=True)
+    show_charity = models.BooleanField("Показывать Give a Paw", default=True)
+    show_brands = models.BooleanField("Показывать бренды", default=True)
+    body = StreamField(body_blocks(), blank=True, verbose_name="Дополнительные блоки (внизу)", use_json_field=True)
 
     content_panels = Page.content_panels + [
         FieldPanel("slides"),
-        MultiFieldPanel([FieldPanel("show_promos"), FieldPanel("show_store_finder"), FieldPanel("show_news")],
+        MultiFieldPanel([FieldPanel("intro_title"), FieldPanel("intro_text"), FieldPanel("stats")],
+                        "О бренде коротко"),
+        MultiFieldPanel([FieldPanel("about_title"), FieldPanel("about_text"), FieldPanel("about_image"),
+                         FieldPanel("about_page"), FieldPanel("advantages")], "О компании и преимущества"),
+        MultiFieldPanel([FieldPanel("show_categories"), FieldPanel("show_promos"), FieldPanel("show_store_finder"),
+                         FieldPanel("show_news"), FieldPanel("show_charity"), FieldPanel("show_brands")],
                         "Автоматические блоки"),
         FieldPanel("body"),
     ]
@@ -80,7 +103,8 @@ class HomePage(Page):
         verbose_name = "Главная"
 
     def get_context(self, request, *args, **kwargs):
-        from stores.models import StoreIndexPage, StorePage
+        from catalog.models import Brand, CategoryIndexPage
+        from stores.models import StoreIndexPage
         ctx = super().get_context(request, *args, **kwargs)
         today = timezone.localdate()
         ctx["promos"] = (PromoPage.objects.live().filter(locale=self.locale, date_from__lte=today,
@@ -88,8 +112,22 @@ class HomePage(Page):
         ctx["promo_index"] = PromoIndexPage.objects.live().filter(locale=self.locale).first()
         ctx["news"] = NewsPage.objects.live().filter(locale=self.locale).order_by("-date")[:3]
         ctx["news_index"] = NewsIndexPage.objects.live().filter(locale=self.locale).first()
-        ctx["store_index"] = StoreIndexPage.objects.live().filter(locale=self.locale).first()
-        ctx["store_count"] = StorePage.objects.live().filter(locale=self.locale).count()
+        store_index = StoreIndexPage.objects.live().filter(locale=self.locale).first()
+        stores = list(store_index.stores()) if store_index else []
+        ctx["store_index"] = store_index
+        ctx["stores"] = stores
+        ctx["store_count"] = len(stores)
+        ctx["stores_data"] = [s.public_dict() for s in stores]
+        ctx["districts"] = sorted({s.district for s in stores if s.district})
+        ctx["stats_list"] = [{"value": b.value["value"].replace("{stores}", str(len(stores))),
+                              "label": b.value["label"]} for b in self.stats]
+        category_index = CategoryIndexPage.objects.live().filter(locale=self.locale).first()
+        ctx["category_index"] = category_index
+        ctx["categories"] = category_index.categories() if category_index else []
+        charity = CharityIndexPage.objects.live().filter(locale=self.locale).first()
+        ctx["charity_index"] = charity
+        ctx["charity_items"] = charity.items()[:3] if charity else []
+        ctx["brands"] = Brand.objects.filter(is_featured=True).select_related("logo")[:18]
         return ctx
 
 
@@ -216,19 +254,37 @@ class NewsIndexPage(Page):
 
     def get_context(self, request, *args, **kwargs):
         ctx = super().get_context(request, *args, **kwargs)
-        paginator = Paginator(NewsPage.objects.child_of(self).live().order_by("-date"), 9)
+        news = NewsPage.objects.child_of(self).live().order_by("-date")
+        used = set(news.values_list("kind", flat=True))
+        kind = request.GET.get("kind", "")
+        if kind in used:
+            news = news.filter(kind=kind)
+        else:
+            kind = ""
+        paginator = Paginator(news, 9)
         ctx["news_page"] = paginator.get_page(request.GET.get("page"))
+        ctx["kinds"] = [(k, NewsPage(kind=k).kind_label) for k, _ in NewsPage.Kind.choices if k in used]
+        ctx["kind"] = kind
         return ctx
 
 
 class NewsPage(ImageMixin, Page):
+    class Kind(models.TextChoices):
+        NEWS = "news", "Новость компании"
+        OPENING = "opening", "Открытие магазина"
+        EVENT = "event", "Мероприятие"
+        CARE = "care", "Уход за питомцем"
+        VET = "vet", "Совет ветеринара"
+        REVIEW = "review", "Обзор товаров"
+
     date = models.DateField("Дата", default=timezone.localdate)
+    kind = models.CharField("Рубрика", max_length=10, choices=Kind.choices, default=Kind.NEWS)
     summary = models.CharField("Кратко", max_length=255, blank=True)
     body = StreamField(body_blocks(), blank=True, verbose_name="Текст", use_json_field=True)
 
     search_fields = Page.search_fields + [index.SearchField("summary"), index.SearchField("body")]
-    content_panels = Page.content_panels + [FieldPanel("date"), FieldPanel("summary"), FieldPanel("image"),
-                                            FieldPanel("body")]
+    content_panels = Page.content_panels + [FieldRowPanel([FieldPanel("date"), FieldPanel("kind")]),
+                                            FieldPanel("summary"), FieldPanel("image"), FieldPanel("body")]
     parent_page_types = ["pages.NewsIndexPage"]
     subpage_types = []
     template = "pages/news_page.html"
@@ -236,6 +292,11 @@ class NewsPage(ImageMixin, Page):
     class Meta:
         verbose_name = "Новость"
         verbose_name_plural = "Новости"
+
+    @property
+    def kind_label(self) -> str:
+        from core.ui import t
+        return t(f"kind_{self.kind}")
 
 
 # ── careers ──────────────────────────────────────────────────────────────────
@@ -329,3 +390,83 @@ class PartnersPage(FormPageMixin, ImageMixin, Page):
 
     def lead_title(self, obj):
         return "Заявка партнёра"
+
+
+# ── Give a Paw (charity) ─────────────────────────────────────────────────────
+
+class CharityIndexPage(ImageMixin, Page):
+    """Give a Paw: the social responsibility programme. Children are projects, events and animal stories."""
+
+    intro = models.TextField("Вступление", blank=True)
+    body = StreamField(body_blocks(), blank=True, verbose_name="О проекте", use_json_field=True)
+    donate_text = models.CharField("Текст кнопки помощи", max_length=60, blank=True,
+                                   help_text="Напр. «Помочь приюту». Пусто — кнопки нет")
+    donate_url = models.URLField("Ссылка кнопки помощи", blank=True,
+                                 help_text="Внешняя платформа пожертвований или Telegram-канал")
+
+    content_panels = Page.content_panels + [
+        FieldPanel("intro"), FieldPanel("image"),
+        FieldRowPanel([FieldPanel("donate_text"), FieldPanel("donate_url")], heading="Кнопка помощи"),
+        FieldPanel("body"),
+    ]
+    parent_page_types = ["pages.HomePage"]
+    subpage_types = ["pages.CharityPage"]
+    max_count_per_parent = 1
+    template = "pages/charity_index_page.html"
+
+    class Meta:
+        verbose_name = "Give a Paw (благотворительность)"
+
+    def items(self):
+        return CharityPage.objects.child_of(self).live().order_by("-date")
+
+    def get_context(self, request, *args, **kwargs):
+        ctx = super().get_context(request, *args, **kwargs)
+        items = list(self.items())
+        ctx["projects"] = [p for p in items if p.kind == CharityPage.Kind.PROJECT]
+        ctx["stories"] = [p for p in items if p.kind == CharityPage.Kind.STORY]
+        ctx["events"] = [p for p in items if p.kind == CharityPage.Kind.EVENT]
+        return ctx
+
+
+class CharityPage(ImageMixin, Page):
+    class Kind(models.TextChoices):
+        PROJECT = "project", "Проект / инициатива"
+        EVENT = "event", "Мероприятие"
+        STORY = "story", "История животного"
+
+    class Status(models.TextChoices):
+        NONE = "", "—"
+        LOOKING = "looking", "Ищет дом"
+        HOME = "home", "Нашёл дом"
+        TREATMENT = "treatment", "На лечении"
+
+    kind = models.CharField("Тип", max_length=10, choices=Kind.choices, default=Kind.PROJECT)
+    date = models.DateField("Дата", default=timezone.localdate)
+    summary = models.CharField("Кратко", max_length=255, blank=True)
+    animal_status = models.CharField("Статус животного", max_length=10, choices=Status.choices, blank=True,
+                                     default="", help_text="Только для историй животных")
+    body = StreamField(body_blocks(), blank=True, verbose_name="Текст и фото", use_json_field=True)
+
+    search_fields = Page.search_fields + [index.SearchField("summary"), index.SearchField("body")]
+    content_panels = Page.content_panels + [
+        FieldRowPanel([FieldPanel("kind"), FieldPanel("date"), FieldPanel("animal_status")]),
+        FieldPanel("summary"), FieldPanel("image"), FieldPanel("body"),
+    ]
+    parent_page_types = ["pages.CharityIndexPage"]
+    subpage_types = []
+    template = "pages/charity_page.html"
+
+    class Meta:
+        verbose_name = "Give a Paw: материал"
+        verbose_name_plural = "Give a Paw: материалы"
+
+    @property
+    def kind_label(self) -> str:
+        from core.ui import t
+        return t(f"charity_{self.kind}")
+
+    @property
+    def status_label(self) -> str:
+        from core.ui import t
+        return t(f"animal_{self.animal_status}") if self.animal_status else ""

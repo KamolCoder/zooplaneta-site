@@ -1,0 +1,6 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+<a class="cat-tile" href="{% pageurl c %}">
+  <span class="cat-tile-ic">{% if c.icon == "paw" %}<svg viewBox="0 0 100 100" class="icon"><use href="#i-paw"/></svg>{% else %}<svg class="icon"><use href="#i-{{ c.icon }}"/></svg>{% endif %}</span>
+  <span class="cat-tile-text"><b>{{ c.title }}</b>{% if c.summary %}<span>{{ c.summary }}</span>{% endif %}</span>
+  <svg class="icon cat-tile-arrow"><use href="#i-arrow"/></svg>
+</a>

@@ -52,6 +52,20 @@ class StatItem(blocks.StructBlock):
     label = blocks.CharBlock(label="Подпись")
 
 
+ICON_CHOICES = [("check", "Галочка"), ("store", "Магазин"), ("tag", "Ценник"), ("clock", "Часы"), ("paw", "Лапка"),
+                ("pin", "Метка"), ("work", "Портфель"), ("partner", "Рукопожатие"), ("phone", "Телефон")]
+
+
+class AdvantageBlock(blocks.StructBlock):
+    icon = blocks.ChoiceBlock(choices=ICON_CHOICES, default="check", label="Иконка")
+    title = blocks.CharBlock(label="Заголовок")
+    text = blocks.TextBlock(label="Текст", required=False)
+
+    class Meta:
+        label = "Преимущество"
+        icon = "pick"
+
+
 class StatsBlock(blocks.StructBlock):
     items = blocks.ListBlock(StatItem(), label="Показатели", min_num=2, max_num=6)
 
@@ -166,6 +180,56 @@ class FAQBlock(blocks.StructBlock):
         template = "blocks/faq.html"
 
 
+class GalleryBlock(blocks.StructBlock):
+    title = blocks.CharBlock(label="Заголовок", required=False)
+    images = blocks.ListBlock(ImageChooserBlock(label="Фото"), label="Фотографии", min_num=1)
+
+    class Meta:
+        label = "Фотогалерея"
+        icon = "image"
+        template = "blocks/gallery.html"
+
+
+class PersonItem(blocks.StructBlock):
+    photo = ImageChooserBlock(label="Фото", required=False)
+    name = blocks.CharBlock(label="Имя")
+    role = blocks.CharBlock(label="Должность", required=False)
+
+
+class TeamBlock(blocks.StructBlock):
+    title = blocks.CharBlock(label="Заголовок", required=False)
+    text = blocks.TextBlock(label="Подзаголовок", required=False)
+    people = blocks.ListBlock(PersonItem(), label="Люди")
+
+    class Meta:
+        label = "Команда"
+        icon = "group"
+        template = "blocks/team.html"
+
+
+class StoresMapBlock(blocks.StructBlock):
+    """Map of every store with the store count — filled automatically from the store pages."""
+
+    title = blocks.CharBlock(label="Заголовок", required=False)
+    text = blocks.TextBlock(label="Текст", required=False)
+
+    class Meta:
+        label = "Карта магазинов (автоматически)"
+        icon = "site"
+        template = "blocks/stores_map.html"
+
+    def get_context(self, value, parent_context=None):
+        from stores.models import StoreIndexPage
+        ctx = super().get_context(value, parent_context)
+        page = (parent_context or {}).get("page")
+        locale = getattr(page, "locale", None)
+        index = StoreIndexPage.objects.live().filter(locale=locale).first() if locale else None
+        stores = list(index.stores()) if index else []
+        ctx.update(store_index=index, map_stores=[s.public_dict() for s in stores], map_count=len(stores),
+                   map_districts=len({s.district for s in stores if s.district}))
+        return ctx
+
+
 class RichTextSection(blocks.RichTextBlock):
     class Meta:
         label = "Текст"
@@ -183,6 +247,9 @@ def body_blocks():
         ("cards", CardsBlock()),
         ("categories", CategoriesBlock()),
         ("timeline", TimelineBlock()),
+        ("gallery", GalleryBlock()),
+        ("team", TeamBlock()),
+        ("stores_map", StoresMapBlock()),
         ("logos", LogosBlock()),
         ("faq", FAQBlock()),
         ("cta", CTABlock()),

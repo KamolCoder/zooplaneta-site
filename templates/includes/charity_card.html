@@ -1,0 +1,9 @@
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+<a class="card" href="{% pageurl item %}">
+  <div class="card-media">{% if item.image %}{% image item.image fill-640x480 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" %}{% endif %}{% if item.status_label %}<span class="badge{% if item.animal_status == 'home' %} badge-green{% endif %}">{{ item.status_label }}</span>{% endif %}</div>
+  <div class="card-body">
+    <div class="card-meta">{{ item.date|human_date }}</div>
+    <h3>{{ item.title }}</h3>
+    {% if item.summary %}<p>{{ item.summary }}</p>{% endif %}
+  </div>
+</a>

@@ -18,6 +18,17 @@
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && nav.classList.contains("open")) setOpen(false); });
   }
 
+  // reveal sections as they scroll into view (CSS hides them only under html.js)
+  const revealEls = document.querySelectorAll(".reveal, .reveal-group");
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+    }), { rootMargin: "0px 0px -8% 0px" });
+    revealEls.forEach((el) => io.observe(el));
+  } else {
+    revealEls.forEach((el) => el.classList.add("is-in"));
+  }
+
   // hero slider
   document.querySelectorAll("[data-slider]").forEach((root) => {
     const slides = [...root.querySelectorAll(".slide")];

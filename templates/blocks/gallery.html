@@ -1,0 +1,3 @@
+{% load wagtailimages_tags %}
+{% if value.title %}<div class="block-heading" style="margin-bottom:28px"><h2>{{ value.title }}</h2></div>{% endif %}
+<div class="gallery reveal-group">{% for img in value.images %}<figure>{% image img fill-800x600 format-webp loading="lazy" %}</figure>{% endfor %}</div>
