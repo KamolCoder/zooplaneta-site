@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+{% block content %}
+{% with s=settings.core.SiteSettings %}
+<header class="page-head loyalty-head">
+  <div class="container">
+    {% include "includes/crumbs.html" %}
+    <div class="page-head-split">
+      <div>
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}<p class="lead">{{ page.intro }}</p>{% endif %}
+        <div class="btn-row" style="margin-top:28px">
+          {% if s.uds_url %}<a class="btn btn-dark btn-lg" href="{{ s.uds_url }}" target="_blank" rel="noopener"><svg class="icon"><use href="#i-gift"/></svg>{% t "join_uds" %}</a>{% endif %}
+        </div>
+      </div>
+      <div class="cashback-card">
+        {% if page.cashback %}<b>{{ page.cashback }}</b>{% endif %}
+        {% if page.cashback_note %}<span>{{ page.cashback_note }}</span>{% endif %}
+        {% if s.uds_code %}
+        <div class="promo-code"><small>{% t "promo_code" %}</small><code>{{ s.uds_code }}</code><button type="button" class="btn btn-sm btn-dark" data-copy="{{ s.uds_code }}" data-copied="{% t 'copied' %}"><svg class="icon"><use href="#i-copy"/></svg>{% t "copy" %}</button></div>
+        {% endif %}
+        {% if s.uds_url %}<div class="qr">{% qr s.uds_url 3 %}<span>{% t "scan_qr" %}</span></div>{% endif %}
+      </div>
+    </div>
+  </div>
+</header>
+{% if page.steps %}
+<section class="section">
+  <div class="container">
+    <div class="section-head"><div><h2>{% t "how_to_join" %}</h2></div></div>
+    <ol class="steps reveal-group">{% for block in page.steps %}<li><span class="step-n">{{ forloop.counter }}</span><b>{{ block.value.title }}</b>{% if block.value.text %}<p>{{ block.value.text }}</p>{% endif %}</li>{% endfor %}</ol>
+  </div>
+</section>
+{% endif %}
+{% if page.rules %}
+<section class="section section-alt">
+  <div class="container narrow">
+    <h2 class="h2" style="margin-bottom:24px">{% t "rules" %}</h2>
+    <div class="prose">{{ page.rules|richtext }}</div>
+  </div>
+</section>
+{% endif %}
+{% if page.body %}<section class="section"><div class="container">{% include "includes/body.html" with body=page.body %}</div></section>{% endif %}
+{% endwith %}
+{% endblock %}

@@ -127,6 +127,39 @@
 </section>
 {% endif %}
 
+{# 6b. delivery + UDS #}
+{% if page.show_services and delivery_page or page.show_services and loyalty_page %}
+<section class="section services">
+  <div class="container">
+    <div class="section-head"><div><h2>{% t "services_title" %}</h2></div></div>
+    <div class="service-cards reveal-group">
+      {% if delivery_page %}
+      <div class="service-card service-card-dark">
+        <span class="service-ic"><svg class="icon"><use href="#i-truck"/></svg></span>
+        <h3>{% t "delivery_card_title" %}</h3>
+        <p>{% t "delivery_card_text" %}</p>
+        {% include "includes/app_buttons.html" with light=1 %}
+        <a class="link-arrow link-arrow-light" href="{% pageurl delivery_page %}">{{ delivery_page.title }}<svg class="icon"><use href="#i-arrow"/></svg></a>
+        <div class="service-media">{% if delivery_page.image %}{% image delivery_page.image fill-640x640 format-webp loading="lazy" %}{% endif %}</div>
+      </div>
+      {% endif %}
+      {% if loyalty_page %}
+      <div class="service-card service-card-yellow">
+        <span class="service-ic"><svg class="icon"><use href="#i-gift"/></svg></span>
+        <h3>{% t "loyalty_card_title" %}</h3>
+        {% if loyalty_page.cashback %}<div class="service-big"><b>{{ loyalty_page.cashback }}</b>{% if loyalty_page.cashback_note %}<span>{{ loyalty_page.cashback_note }}</span>{% endif %}</div>{% else %}<p>{% t "loyalty_card_text" %}</p>{% endif %}
+        <div class="btn-row">
+          {% if settings.core.SiteSettings.uds_url %}<a class="btn btn-dark" href="{{ settings.core.SiteSettings.uds_url }}" target="_blank" rel="noopener">{% t "join_uds" %}</a>{% endif %}
+          <a class="btn btn-outline" href="{% pageurl loyalty_page %}">{% t "more" %}</a>
+        </div>
+        <div class="service-media">{% if loyalty_page.image %}{% image loyalty_page.image fill-640x640 format-webp loading="lazy" %}{% endif %}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 {# 7. news #}
 {% if page.show_news and news %}
 <section class="section">

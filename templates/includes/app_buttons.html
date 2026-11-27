@@ -1,0 +1,6 @@
+{% load site_tags %}{% with s=settings.core.SiteSettings %}{% if s.has_app %}
+<div class="app-buttons{% if light %} app-buttons-light{% endif %}">
+  {% if s.app_store_url %}<a class="app-btn" href="{{ s.app_store_url }}" target="_blank" rel="noopener"><svg class="icon"><use href="#i-download"/></svg><span><small>{% t "download_on" %}</small>App Store</span></a>{% endif %}
+  {% if s.google_play_url %}<a class="app-btn" href="{{ s.google_play_url }}" target="_blank" rel="noopener"><svg class="icon"><use href="#i-download"/></svg><span><small>{% t "download_on" %}</small>Google Play</span></a>{% endif %}
+</div>
+{% endif %}{% endwith %}

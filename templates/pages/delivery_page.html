@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags site_tags %}
+{% block content %}
+{% with s=settings.core.SiteSettings %}
+<header class="page-head">
+  <div class="container">
+    {% include "includes/crumbs.html" %}
+    <div class="page-head-split">
+      <div>
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}<p class="lead">{{ page.intro }}</p>{% endif %}
+        <div class="btn-row" style="margin-top:28px">
+          {% if s.has_app %}<a class="btn btn-dark btn-lg" href="#app" data-app-link data-ios="{{ s.app_store_url }}" data-android="{{ s.google_play_url }}"><svg class="icon"><use href="#i-mobile"/></svg>{% t "get_app" %}</a>{% endif %}
+          {% if page.aggregators %}<a class="btn btn-outline btn-lg" href="#services">{% t "aggregators_title" %}</a>{% endif %}
+        </div>
+      </div>
+      <div class="media">{% if page.image %}{% image page.image fill-960x720 format-webp %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+    </div>
+  </div>
+</header>
+
+<section class="section" id="app">
+  <div class="container app-promo">
+    <div class="app-promo-text">
+      {% if page.app_title %}<h2>{{ page.app_title }}</h2>{% endif %}
+      {% if page.app_text %}<p class="lead-sm">{{ page.app_text }}</p>{% endif %}
+      {% if page.app_features %}
+      <ul class="feature-list">{% for block in page.app_features %}{% with a=block.value %}<li><span class="advantage-ic"><svg class="icon"><use href="#i-{{ a.icon }}"/></svg></span><div><b>{{ a.title }}</b>{% if a.text %}<p>{{ a.text }}</p>{% endif %}</div></li>{% endwith %}{% endfor %}</ul>
+      {% endif %}
+      {% if s.has_app %}
+      <div class="app-get">
+        {% include "includes/app_buttons.html" %}
+        <div class="qr" title="{% t 'scan_qr' %}">{% if s.google_play_url %}{% qr s.google_play_url 3 %}{% else %}{% qr s.app_store_url 3 %}{% endif %}<span>{% t "scan_qr" %}</span></div>
+      </div>
+      {% else %}<p class="note">{% t "app_soon" %}</p>{% endif %}
+    </div>
+    <div class="phones">
+      {% for block in page.screenshots|slice:":2" %}<div class="phone">{% image block.value fill-540x1170 format-webp loading="lazy" %}</div>{% empty %}
+      <div class="phone"><div class="phone-ph">{% include "includes/ph.html" with yellow=1 %}</div></div><div class="phone"><div class="phone-ph">{% include "includes/ph.html" %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if page.steps %}
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head"><div><h2>{% t "how_to_order" %}</h2></div></div>
+    <ol class="steps reveal-group">{% for block in page.steps %}<li><span class="step-n">{{ forloop.counter }}</span><b>{{ block.value.title }}</b>{% if block.value.text %}<p>{{ block.value.text }}</p>{% endif %}</li>{% endfor %}</ol>
+  </div>
+</section>
+{% endif %}
+
+{% if page.aggregators %}
+<section class="section" id="services">
+  <div class="container">
+    <div class="section-head"><div><h2>{% t "aggregators_title" %}</h2></div></div>
+    <div class="aggregators reveal-group">
+      {% for block in page.aggregators %}{% with a=block.value %}
+      {% if a.url %}<a class="aggregator" href="{{ a.url }}" target="_blank" rel="noopener">{% else %}<div class="aggregator">{% endif %}
+        <span class="aggregator-logo">{% if a.logo %}{% image a.logo max-200x80 alt=a.name %}{% else %}{{ a.name }}{% endif %}</span>
+        <span class="aggregator-text"><b>{{ a.name }}</b>{% if a.note %}<span>{{ a.note }}</span>{% endif %}</span>
+        {% if a.url %}<span class="link-arrow">{% t "open_in" %}<svg class="icon"><use href="#i-arrow"/></svg></span>{% endif %}
+      {% if a.url %}</a>{% else %}</div>{% endif %}
+      {% endwith %}{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if page.conditions %}
+<section class="section{% if page.aggregators %} section-alt{% endif %}">
+  <div class="container narrow">
+    <h2 class="h2" style="margin-bottom:24px">{% t "delivery_terms" %}</h2>
+    <div class="prose">{{ page.conditions|richtext }}</div>
+    <p class="note">{% t "call_center" %}: <a href="tel:{{ s.phone_href }}"><b>{{ s.phone }}</b></a>{% if s.short_phone %} · {% t "short_number" %} <a href="tel:{{ s.short_phone }}"><b>{{ s.short_phone }}</b></a>{% endif %}{% if s.phone_hours %}, {% t "daily" %} {{ s.phone_hours }}{% endif %}</p>
+  </div>
+</section>
+{% endif %}
+
+{% if page.body %}<section class="section"><div class="container">{% include "includes/body.html" with body=page.body %}</div></section>{% endif %}
+{% endwith %}
+{% endblock %}

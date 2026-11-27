@@ -17,8 +17,8 @@ from wagtail.models import Locale, Page, Site
 
 from catalog.models import Brand, CategoryIndexPage, CategoryPage
 from core.models import SiteSettings
-from pages.models import (CareersPage, CharityIndexPage, CharityPage, ContactPage, HomePage, NewsIndexPage, NewsPage,
-                          PartnersPage, PromoIndexPage, PromoPage, StandardPage, VacancyPage)
+from pages.models import (CareersPage, CharityIndexPage, CharityPage, ContactPage, DeliveryPage, HomePage, LoyaltyPage,
+                          NewsIndexPage, NewsPage, PartnersPage, PromoIndexPage, PromoPage, StandardPage, VacancyPage)
 from stores.models import StoreIndexPage, StorePage
 
 L = ("ru", "uz", "en")
@@ -168,6 +168,8 @@ class Command(BaseCommand):
         promos = self.build_promos(home)
         self.build_news(home)
         self.build_charity(home)
+        delivery = self.build_delivery(home)
+        self.build_loyalty(home)
         careers = self.build_careers(home)
         partners = self.build_partners(home)
         self.build_contacts(home)
@@ -175,7 +177,7 @@ class Command(BaseCommand):
         settings = SiteSettings.load()
         settings.privacy_page = privacy
         settings.save()
-        self.fill_home(home, about, stores, promos, careers, partners)
+        self.fill_home(home, about, stores, promos, careers, partners, delivery)
         self.stdout.write(self.style.SUCCESS("Demo content created. Open /ru/ — and /cms/ to edit it."))
 
     # ── helpers ──────────────────────────────────────────────────────────────
@@ -523,6 +525,70 @@ class Command(BaseCommand):
                            [{"type": "text", "value": rt(summary[1], "Demo matn — CMS orqali almashtiring.")}]))
         return index
 
+    def build_delivery(self, home):
+        def adv(icon, t, d):
+            return {"type": "item", "value": {"icon": icon, "title": t, "text": d}}
+
+        def step(t, d):
+            return {"type": "step", "value": {"title": t, "text": d}}
+
+        def svc(name, note):
+            return {"type": "service", "value": {"name": name, "logo": None, "url": "", "note": note}}
+
+        return self.tri(
+            home, DeliveryPage, langs=("ru", "uz"), slug="delivery", show_in_menus=(False, False),
+            title=("Доставка", "Yetkazib berish"),
+            intro=("Корма, наполнители и товары для питомцев с доставкой по Ташкенту — в нашем приложении "
+                   "и в популярных сервисах доставки.",
+                   "Yem, toʻldirgich va uy hayvonlari uchun mahsulotlar Toshkent boʻylab yetkazib beriladi — "
+                   "ilovamizda va mashhur yetkazib berish xizmatlarida."),
+            app_title=("Приложение Zoo Planeta", "Zoo Planeta ilovasi"),
+            app_text=("Весь ассортимент ближайшего магазина в телефоне: цены, акции и доставка домой.",
+                      "Eng yaqin doʻkonning butun assortimenti telefoningizda: narxlar, aksiyalar va uyga yetkazish."),
+            app_features=([adv("tag", "Цены и акции", "Те же цены, что в магазине, и скидки только для приложения."),
+                           adv("clock", "Быстрая доставка", "Привезём из ближайшего магазина в удобное время."),
+                           adv("gift", "Бонусы UDS", "Баллы начисляются и за заказы в приложении.")],
+                          [adv("tag", "Narxlar va aksiyalar", "Doʻkondagi narxlar va faqat ilova uchun chegirmalar."),
+                           adv("clock", "Tez yetkazish", "Eng yaqin doʻkondan qulay vaqtda olib kelamiz."),
+                           adv("gift", "UDS bonuslari", "Ilovadagi buyurtmalar uchun ham ball beriladi.")]),
+            screenshots=([], []),
+            steps=([step("Скачайте приложение", "App Store или Google Play."),
+                    step("Выберите товары", "Ассортимент ближайшего к вам магазина."),
+                    step("Получите заказ", "Курьер привезёт его в выбранное время.")],
+                   [step("Ilovani yuklab oling", "App Store yoki Google Play."),
+                    step("Mahsulotlarni tanlang", "Sizga eng yaqin doʻkon assortimenti."),
+                    step("Buyurtmani oling", "Kuryer tanlangan vaqtda olib keladi.")]),
+            conditions=(ul("Зона доставки: весь Ташкент (демо-текст).", "Минимальная сумма заказа — уточните в приложении.",
+                           "Оплата: картой в приложении или курьеру."),
+                        ul("Yetkazish hududi: butun Toshkent (demo matn).", "Minimal buyurtma summasi — ilovada.",
+                           "Toʻlov: ilovada karta orqali yoki kuryerga.")),
+            aggregators=([svc("Express24", "Демо — укажите ссылку в CMS"), svc("Yandex Eats", "Демо — укажите ссылку в CMS"),
+                          svc("Uzum Tezkor", "Демо — укажите ссылку в CMS")],
+                         [svc("Express24", "Demo — CMS’da havolani kiriting"), svc("Yandex Eats", "Demo — CMS’da havolani kiriting"),
+                          svc("Uzum Tezkor", "Demo — CMS’da havolani kiriting")]),
+            body=([], []))
+
+    def build_loyalty(self, home):
+        def step(t, d):
+            return {"type": "step", "value": {"title": t, "text": d}}
+
+        return self.tri(
+            home, LoyaltyPage, langs=("ru", "uz"), slug="bonus", show_in_menus=(False, False),
+            title=("Бонусы UDS", "UDS bonuslari"),
+            intro=("Программа лояльности Zoo Planeta в приложении UDS: баллы с каждой покупки во всех магазинах сети.",
+                   "UDS ilovasidagi Zoo Planeta sodiqlik dasturi: tarmoqning barcha doʻkonlarida har bir xariddan ball."),
+            cashback=("до 5%", "5% gacha"),
+            cashback_note=("баллами с каждой покупки (демо)", "har bir xariddan ball (demo)"),
+            steps=([step("Установите UDS", "Бесплатное приложение в App Store или Google Play."),
+                    step("Вступите в Zoo Planeta", "По ссылке или промокоду на этой странице."),
+                    step("Покажите код на кассе", "Баллы начислятся автоматически — ими можно оплатить часть покупки.")],
+                   [step("UDS ni oʻrnating", "App Store yoki Google Play’dagi bepul ilova."),
+                    step("Zoo Planetaga qoʻshiling", "Shu sahifadagi havola yoki promokod orqali."),
+                    step("Kassada kodni koʻrsating", "Ballar avtomatik yoziladi — ular bilan xaridning bir qismini toʻlash mumkin.")]),
+            rules=(rt("Демо-текст. Укажите процент кешбэка, какую часть покупки можно оплатить баллами и срок их действия."),
+                   rt("Demo matn. Keshbek foizi, xaridning qancha qismini ball bilan toʻlash mumkinligi va amal qilish muddatini yozing.")),
+            body=([], []))
+
     def build_privacy(self, home):
         text = ("Здесь будет политика обработки персональных данных. Текст должен подготовить юрист компании.",
                 "Bu yerda shaxsiy maʼlumotlarni qayta ishlash siyosati boʻladi. Matnni kompaniya yuristi tayyorlashi kerak.",
@@ -531,7 +597,7 @@ class Command(BaseCommand):
                         title=("Политика конфиденциальности", "Maxfiylik siyosati", "Privacy policy"),
                         intro=("", "", ""), body=tuple([{"type": "text", "value": rt(t)}] for t in text))
 
-    def fill_home(self, home, about, stores, promos, careers, partners):
+    def fill_home(self, home, about, stores, promos, careers, partners, delivery):
         def slides(i, code):
             items = [
                 {"type": "slide", "value": {
@@ -545,6 +611,13 @@ class Command(BaseCommand):
                              "page": stores.get_translation(self.loc[code]).pk, "url": ""}}},
             ]
             if code != "en":
+                items.append({"type": "slide", "value": {
+                    "title": ("Доставка корма домой", "Yemni uyga yetkazib beramiz")[i],
+                    "text": ("Закажите в приложении Zoo Planeta или в сервисах доставки.",
+                             "Zoo Planeta ilovasida yoki yetkazib berish xizmatlarida buyurtma bering.")[i],
+                    "image": None, "theme": "light",
+                    "link": {"text": ("Заказать доставку", "Buyurtma berish")[i],
+                             "page": delivery.get_translation(self.loc[code]).pk, "url": ""}}})
                 items.append({"type": "slide", "value": {
                     "title": ("−20% на сухие корма для кошек", "Mushuklar uchun quruq yemga −20%")[i],
                     "text": ("Две недели во всех магазинах сети.", "Ikki hafta davomida barcha doʻkonlarda.")[i],

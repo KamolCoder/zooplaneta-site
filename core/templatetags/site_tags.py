@@ -148,3 +148,16 @@ def analytics():
     from django.conf import settings as dj_settings
     from core.models import SiteSettings
     return {"s": SiteSettings.load(), "enabled": not dj_settings.DEBUG}
+
+
+@register.simple_tag
+def qr(url, scale=4):
+    """Inline SVG QR code for a URL (for desktop visitors who need to open a link on their phone)."""
+    from django.utils.safestring import mark_safe
+    return mark_safe(_qr_svg(str(url), int(scale))) if url else ""
+
+
+@__import__("functools").lru_cache(maxsize=64)
+def _qr_svg(url: str, scale: int) -> str:
+    import segno
+    return segno.make(url, error="m").svg_inline(scale=scale, dark="#111", border=2, omitsize=False)
