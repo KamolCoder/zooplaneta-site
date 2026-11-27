@@ -4,33 +4,35 @@
 {% block content %}
 {# 1. hero #}
 <section class="hero">
-  <div class="container">
-    {% if page.slides %}
-    <div class="slider" data-slider>
-      <div class="slides">
-        {% for block in page.slides %}{% with s=block.value %}
-        <div class="slide slide-{{ s.theme }}{% if forloop.first %} is-active{% endif %}" role="group" aria-roledescription="slide" aria-label="{{ forloop.counter }} / {{ page.slides|length }}">
+  {% if page.slides %}
+  <div class="slider" data-slider>
+    <div class="slides">
+      {% for block in page.slides %}{% with s=block.value %}
+      <div class="slide slide-{{ s.theme }}{% if s.image %} has-image{% endif %}{% if forloop.first %} is-active{% endif %}" role="group" aria-roledescription="slide" aria-label="{{ forloop.counter }} / {{ page.slides|length }}">
+        <div class="slide-media">{% if s.image %}{% if forloop.first %}{% srcset_image s.image fill-{800x600,1400x760,2200x1000} format-webp sizes="100vw" fetchpriority="high" %}{% else %}{% srcset_image s.image fill-{800x600,1400x760,2200x1000} format-webp sizes="100vw" loading="lazy" %}{% endif %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+        <div class="slide-inner">
           <div class="slide-text">
             {% if forloop.first %}<h1>{{ s.title }}</h1>{% else %}<h2>{{ s.title }}</h2>{% endif %}
             {% if s.text %}<p>{{ s.text }}</p>{% endif %}
             {% if s.link.text and s.link|link_url %}<a class="btn btn-lg {% if s.theme == 'dark' %}btn-yellow{% else %}btn-dark{% endif %}" href="{{ s.link|link_url }}">{{ s.link.text }}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
           </div>
-          <div class="slide-media">{% if s.image %}{% if forloop.first %}{% image s.image fill-1200x960 format-webp fetchpriority="high" %}{% else %}{% image s.image fill-1200x960 format-webp loading="lazy" %}{% endif %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
         </div>
-        {% endwith %}{% endfor %}
       </div>
-      {% if page.slides|length > 1 %}
-      <div class="slider-ui">
-        <button class="slider-arrow" type="button" data-prev aria-label="{% t 'prev' %}"><svg class="icon"><use href="#i-arrow-left"/></svg></button>
-        <div class="slider-dots">{% for b in page.slides %}<button type="button" aria-label="{{ forloop.counter }}"{% if forloop.first %} class="is-active"{% endif %}></button>{% endfor %}</div>
-        <button class="slider-arrow" type="button" data-next aria-label="{% t 'next' %}"><svg class="icon"><use href="#i-arrow"/></svg></button>
-      </div>
-      {% endif %}
+      {% endwith %}{% endfor %}
     </div>
-    {% else %}
-      <h1 class="sr-only">{{ page.title }}</h1>
+    {% if page.slides|length > 1 %}
+    <div class="slider-ui">
+      <button class="slider-arrow" type="button" data-prev aria-label="{% t 'prev' %}"><svg class="icon"><use href="#i-arrow-left"/></svg></button>
+      <div class="slider-dots">{% for b in page.slides %}<button type="button" aria-label="{{ forloop.counter }}"{% if forloop.first %} class="is-active"{% endif %}></button>{% endfor %}</div>
+      <button class="slider-arrow" type="button" data-next aria-label="{% t 'next' %}"><svg class="icon"><use href="#i-arrow"/></svg></button>
+    </div>
     {% endif %}
+  </div>
+  {% else %}
+    <h1 class="sr-only">{{ page.title }}</h1>
+  {% endif %}
 
+  <div class="container">
     {% find_page "pages.CareersPage" as careers %}{% find_page "pages.PartnersPage" as partners %}
     <nav class="quick" aria-label="Quick links">
       {% if store_index %}<a href="{% pageurl store_index %}"><span class="quick-ic"><svg class="icon"><use href="#i-store"/></svg></span><span><b>{{ store_index.title }}</b><span>{{ store_count }} {% t "stores_in_tashkent" %}</span></span></a>{% endif %}
@@ -86,7 +88,7 @@
   <div class="container">
     {% if page.about_title %}
     <div class="about-split reveal">
-      <div class="about-media">{% if page.about_image %}{% image page.about_image fill-960x760 format-webp loading="lazy" %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
+      <div class="about-media">{% if page.about_image %}{% srcset_image page.about_image fill-{720x600,1200x1000} format-webp sizes="(max-width: 960px) 100vw, 50vw" loading="lazy" %}{% else %}{% include "includes/ph.html" %}{% endif %}</div>
       <div class="about-text">
         <h2>{{ page.about_title }}</h2>
         {% if page.about_text %}<div class="prose">{{ page.about_text|richtext }}</div>{% endif %}

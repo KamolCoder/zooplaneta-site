@@ -18,7 +18,7 @@ from wagtail.images import get_image_model
 from wagtail.models import Collection, Page
 
 COLLECTION = "Демо-фото (Unsplash)"
-URL = "https://images.unsplash.com/photo-{id}?w=1600&q=78&fm=jpg&fit=max"
+URL = "https://images.unsplash.com/photo-{id}?w=2400&q=78&fm=jpg&fit=max"
 
 # key -> (Unsplash photo id, title)
 PHOTOS = {

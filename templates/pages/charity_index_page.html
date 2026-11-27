@@ -11,7 +11,7 @@
         {% if page.intro %}<p class="lead">{{ page.intro }}</p>{% endif %}
         {% if page.donate_url and page.donate_text %}<a class="btn btn-dark btn-lg" href="{{ page.donate_url }}" target="_blank" rel="noopener" style="margin-top:28px"><svg class="icon"><use href="#i-heart"/></svg>{{ page.donate_text }}</a>{% endif %}
       </div>
-      <div class="media">{% if page.image %}{% image page.image fill-960x720 format-webp %}{% else %}{% include "includes/ph.html" with yellow=1 %}{% endif %}</div>
+      <div class="media">{% if page.image %}{% srcset_image page.image fill-{720x540,1200x900} format-webp sizes="(max-width: 900px) 100vw, 45vw" %}{% else %}{% include "includes/ph.html" with yellow=1 %}{% endif %}</div>
     </div>
   </div>
 </header>

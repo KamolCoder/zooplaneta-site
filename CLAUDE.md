@@ -49,7 +49,7 @@ self-hosted Onest font and Leaflet (no CDNs).
 ## Design
 Brand from the logo: yellow `#FDCC27`, black `#111`, white / `#F6F5F1`. Onest. Yellow is a surface colour
 (banners, badges, CTA) — never yellow text on white. No gradients/blobs/emoji/eyebrow labels; restrained grid,
-14/22 px radii, line icons from `templates/includes/icons.html`, paw placeholder `includes/ph.html` until photos.
+container 1440 px (32/16 px side padding); photos bleed to the screen edge (full-width hero with the text on a brand panel, page-head photo on the right 45%, about photo / stores map / gallery / delivery cards via `--edge`); 14/22 px radii, line icons from `templates/includes/icons.html`, paw placeholder `includes/ph.html` until photos.
 Motion: `.reveal` / `.reveal-group` fade-in on scroll (only under `html.js`, off with reduced motion).
 Name is «Zoo Planeta» (Latin) in every language.
 

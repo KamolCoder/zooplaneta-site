@@ -58,8 +58,6 @@
       i = (n + slides.length) % slides.length;
       slides.forEach((s, k) => { s.classList.toggle("is-active", k === i); s.setAttribute("aria-hidden", String(k !== i)); });
       dots.forEach((d, k) => d.classList.toggle("is-active", k === i));
-      // dots/arrows take the colour of the current slide's text
-      root.querySelector(".slider-ui").style.color = getComputedStyle(slides[i]).color;
     };
     const play = () => { if (!reduced) { stop(); timer = setInterval(() => go(i + 1), 7000); } };
     const stop = () => { if (timer) clearInterval(timer); timer = null; };
