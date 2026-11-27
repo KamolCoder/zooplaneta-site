@@ -53,7 +53,7 @@ Motion: `.reveal` / `.reveal-group` fade-in on scroll (only under `html.js`, off
 Name is «Zoo Planeta» (Latin) in every language.
 
 ## Content rules
-EN is for foreign partners: home, about, stores, catalogue, partners, contacts. Promos/news/vacancies/Give a Paw are RU+UZ;
+EN is for foreign partners: home, about, stores, catalogue, partners, contacts. Promos/news/vacancies/Give a Paw/delivery/UDS are RU+UZ;
 untranslated pages are hidden from that language's menu automatically.
 Uzbek uses ʻ (U+02BB) and ʼ (U+02BC): oʻ, gʻ, maʼlumot.
 
