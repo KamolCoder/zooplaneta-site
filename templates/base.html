@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="{% static 'css/site.css' %}">
 {% block extra_head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}"{% if settings.core.SiteSettings.easter_paws %} data-paws{% endif %}>
 {% include "includes/icons.html" %}
 <a class="skip" href="#main">{% t "skip" %}</a>
 {% language_links as langs %}
@@ -135,6 +135,15 @@
   </div>
 </footer>
 
+{% if settings.core.SiteSettings.easter_paws %}
+<div class="paw-fab" data-paw-fab>
+  <span class="paw-fab-tip" aria-hidden="true">{% t "paw_btn" %}</span>
+  <button type="button" class="paw-fab-btn" aria-label="{% t 'paw_btn' %}"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#i-paw"/></svg></button>
+</div>
+<div class="paw-toast" data-paw-toast role="status" aria-live="polite" hidden>
+  <span>{% t "paw_thanks" %}</span>{% if charity_index %}<a href="{% pageurl charity_index %}">{% t "paw_help" %}<svg class="icon"><use href="#i-arrow"/></svg></a>{% endif %}
+</div>
+{% endif %}
 <nav class="mobile-bar" aria-label="{% t 'menu' %}">
   <a href="tel:{{ settings.core.SiteSettings.short_phone|default:settings.core.SiteSettings.phone_href }}"><svg class="icon"><use href="#i-phone"/></svg>{% t "call" %}</a>
   {% if delivery_page %}<a href="{% pageurl delivery_page %}" class="mobile-bar-main"><svg class="icon"><use href="#i-truck"/></svg>{{ delivery_page.title }}</a>{% endif %}
@@ -143,6 +152,7 @@
 {% wagtailuserbar "bottom-left" %}
 {% analytics %}
 <script src="{% static 'js/site.js' %}" defer></script>
+{% with season=settings.core.SiteSettings.season_active %}{% if season %}<script src="{% static 'js/season.js' %}" data-effect="{{ season }}" defer></script>{% endif %}{% endwith %}
 {% block extra_js %}{% endblock %}
 </body>
 </html>
