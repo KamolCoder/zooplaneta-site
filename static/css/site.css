@@ -538,6 +538,10 @@ a.contact-card:hover { border-color: var(--black); }
 .socials a:hover { background: var(--yellow); border-color: var(--yellow); color: var(--black); }
 .socials .icon { width: 18px; height: 18px; }
 .footer-bottom { border-top: 1px solid #262626; padding: 22px 0; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-size: 13.5px; color: rgba(255,255,255,.5); }
+.footer-bottom-links { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.footer-bottom .made-by a { color: rgba(255,255,255,.75); }
+.footer-bottom .made-by a:hover { color: #fff; }
+@media (min-width: 761px) { body[data-paws] .footer-bottom { padding-right: 72px; } }   /* keep clear of the paw button */
 @media (max-width: 1080px) { .footer-grid { grid-template-columns: 1fr 1fr 1fr; } .footer-brand { grid-column: 1 / -1; } }
 @media (max-width: 600px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px 20px; } .footer-contacts { grid-column: 1 / -1; } }
 

@@ -48,6 +48,9 @@ class SiteSettings(ClusterableModel, BaseGenericSetting):
                                      help_text="Ссылка в подвале и у форм")
     office_lat = models.DecimalField("Офис: широта", max_digits=9, decimal_places=6, null=True, blank=True)
     office_lng = models.DecimalField("Офис: долгота", max_digits=9, decimal_places=6, null=True, blank=True)
+    developer_name = models.CharField("Разработчик сайта", max_length=80, blank=True,
+                                      help_text="Внизу подвала: «Разработка сайта — …»; пусто — строка не показывается")
+    developer_url = models.URLField("Разработчик: ссылка", blank=True, help_text="Сайт, Telegram или Instagram")
 
     easter_paws = models.BooleanField("Кнопка «Дай лапу»", default=True,
                                       help_text="Жёлтая кнопка с лапой в углу экрана: по клику бегут следы лап "
@@ -73,7 +76,8 @@ class SiteSettings(ClusterableModel, BaseGenericSetting):
                          FieldPanel("yandex_metrika_id"), FieldPanel("ga4_id")], "Поисковики и аналитика"),
         MultiFieldPanel([FieldPanel("legal_name"), FieldPanel("tax_id"), FieldPanel("address_ru"),
                          FieldPanel("address_uz"), FieldPanel("address_en"), FieldPanel("office_lat"),
-                         FieldPanel("office_lng"), FieldPanel("privacy_page")], "Компания"),
+                         FieldPanel("office_lng"), FieldPanel("privacy_page"), FieldPanel("developer_name"),
+                         FieldPanel("developer_url")], "Компания"),
         MultiFieldPanel([FieldPanel("easter_paws"), FieldPanel("fun_404")], "Интерактив"),
         MultiFieldPanel([FieldPanel("season_enabled"), FieldPanel("season_greeting_ru"), FieldPanel("season_greeting_uz"),
                          FieldPanel("season_greeting_en")], "Сезонное оформление"),

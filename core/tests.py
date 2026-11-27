@@ -545,6 +545,14 @@ class InteractiveTests(TestCase):
         self.assertNotIn("data-paw-fab", ru)
         self.assertNotIn("data-paws", ru)
 
+    def test_developer_credit(self):
+        self.assertNotIn("made-by", self.client.get("/ru/").content.decode())     # empty → hidden
+        self._settings(developer_name="Studio X")
+        self.assertIn("Разработка сайта — Studio X</span>", self.client.get("/ru/").content.decode())
+        self._settings(developer_url="https://example.com/")
+        uz = self.client.get("/uz/").content.decode()
+        self.assertIn('Sayt ishlab chiqilgan: <a href="https://example.com/" target="_blank" rel="noopener">Studio X</a>', uz)
+
     def _periods(self, *rows):
         """Replace the season periods: rows of (effect, date_from, date_to, yearly)."""
         from core.models import SeasonPeriod

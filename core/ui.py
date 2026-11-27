@@ -17,6 +17,7 @@ STRINGS: dict[str, dict[str, str]] = {
     "for_customers": {"ru": "Покупателям", "uz": "Xaridorlarga", "en": "Customers"},
     "contacts": {"ru": "Контакты", "uz": "Aloqa", "en": "Contacts"},
     "follow_us": {"ru": "Мы в соцсетях", "uz": "Ijtimoiy tarmoqlarda", "en": "Follow us"},
+    "made_by": {"ru": "Разработка сайта —", "uz": "Sayt ishlab chiqilgan:", "en": "Website by"},
     "all_rights": {"ru": "Все права защищены.", "uz": "Barcha huquqlar himoyalangan.", "en": "All rights reserved."},
     "home": {"ru": "Главная", "uz": "Bosh sahifa", "en": "Home"},
     "skip": {"ru": "Перейти к содержанию", "uz": "Asosiy qismga oʻtish", "en": "Skip to content"},

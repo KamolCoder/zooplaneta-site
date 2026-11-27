@@ -130,7 +130,10 @@
     </div>
     <div class="footer-bottom">
       <span>© {% now "Y" %} {{ settings.core.SiteSettings.legal_name }}{% if settings.core.SiteSettings.tax_id %} · ИНН {{ settings.core.SiteSettings.tax_id }}{% endif %}. {% t "all_rights" %}</span>
-      {% with pp=settings.core.SiteSettings.privacy_page %}{% if pp and pp.localized.live %}<a href="{% pageurl pp.localized %}">{{ pp.localized.title }}</a>{% else %}<span>zooplaneta.uz</span>{% endif %}{% endwith %}
+      <div class="footer-bottom-links">
+        {% with pp=settings.core.SiteSettings.privacy_page %}{% if pp and pp.localized.live %}<a href="{% pageurl pp.localized %}">{{ pp.localized.title }}</a>{% else %}<span>zooplaneta.uz</span>{% endif %}{% endwith %}
+        {% with s=settings.core.SiteSettings %}{% if s.developer_name %}<span class="made-by">{% t "made_by" %} {% if s.developer_url %}<a href="{{ s.developer_url }}" target="_blank" rel="noopener">{{ s.developer_name }}</a>{% else %}{{ s.developer_name }}{% endif %}</span>{% endif %}{% endwith %}
+      </div>
     </div>
   </div>
 </footer>
